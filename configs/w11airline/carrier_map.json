@@ -1,0 +1,101 @@
+{
+ "schema": "w11airline.carrier_map/v1",
+ "window": "W11.2",
+ "status": "FROZEN（跑前落盘；由 FREEZE_CARRIER_MAP.sha256 覆盖；不在 FREEZE_AIRLINE.sha256 内，后者保持签核时的 4 件不变）",
+ "created_at": "2026-11-05T10:45:00",
+ "seed": 20261105,
+ "role": "把 airline 的真实写动作载到三工具面（CSV 追加／上传／投递）。**本文件只放生成规则，不放任何任务级映射表**：18／15 个任务的 (entity, field, component, offset, len) 全部由 carrier.py 按本文件的规则从 db + evaluation_criteria.actions 现算。",
+ "hand_written_task_maps": 0,
+ "why_no_task_table": "窗口 §2 T2 明令『必须自动生成，不许手写 18 个任务的映射表』；手写表无法随 db 变动自证，也无法被 sha256 冻结以外的机制审查。",
+ "source": {
+  "prereg": "configs/w11airline/PREREG_AIRLINE.json",
+  "prereg_sha256": "5540158c61b51e5c7f7c2ffb4a49c503c8e2789569c9a7460a5b97566a0c8b28",
+  "prereg_sections_used": [
+   "carrier.field_write_map",
+   "carrier.entity_key",
+   "carrier.channels",
+   "carrier.labels",
+   "carrier.non_field_writes",
+   "carrier.text_model"
+  ]
+ },
+ "entity": {
+  "db_table": "reservations",
+  "id_from": "reservation_id",
+  "entity_key": "reservation_id（裸 id，与 db.reservations 的键逐字相同；不合成复合键）",
+  "field_scope": "同一 reservation 记录的顶层属性（cabin／flights／passengers／total_baggages／nonfree_baggages）"
+ },
+ "field_write_map": {
+  "update_reservation_baggages": [
+   "total_baggages",
+   "nonfree_baggages"
+  ],
+  "update_reservation_flights": [
+   "flights",
+   "cabin"
+  ],
+  "update_reservation_passengers": [
+   "passengers"
+  ]
+ },
+ "touched_rule": {
+  "scalar": "whole_if_changed",
+  "dict": "supplied_keys_differ",
+  "list": "per_element_supplied_keys_differ",
+  "skip_if_no_change": true,
+  "definitions": {
+   "scalar": "int / str / bool / null：动作参数与本字段值不等 ⇒ 整个标量（唯一 component）被写；相等 ⇒ 无状态改变，不发射（与 retail『动作参数与 db 现状一致即不发射』同口径）。",
+   "dict": "对动作参数里出现的每个键：base[key] != arg[key] ⇒ 该键的『键名 + 值』区间被写（区间含键名，形如 `\"origin\": \"HAT\"`）。",
+   "list": "按下标对齐：i < len(arg) 时，arg[i] 里出现的每个键与 base[i] 的同名键比较，任一不等 ⇒ 第 i 个元素整体被写；i >= len(arg) ⇒ 该元素被移除，整体被写。元素区间是该元素的完整规范文本。",
+   "skip_if_no_change": "任一字段算出的触及集合为空 ⇒ 该动作不发射片段（无 coverage 事件）。"
+  },
+  "not_used": [
+   "按字节 diff 只取变化子区间（会编造工具并不具备的『部分覆盖』语义）",
+   "把整个字段无条件当触及（会把『参数与现状一致』的空动作也算成写）"
+  ],
+  "new_elements_policy": "若 arg 的元素数多于 base（新增元素），新增部分在 base 文本里没有字节区间 ⇒ 不计入 coverage（只记 `new_elements` 计数并落盘），因为门度量的是**既有 cell 的覆盖**。"
+ },
+ "text_model": {
+  "canonical": "json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(', ', ': '))",
+  "encoding": "utf-8",
+  "offset_unit": "UTF-8 字节",
+  "atomic_unit": {
+   "dict": "顶层键（区间含键名）",
+   "list": "元素（整个元素对象）",
+   "scalar": "标量本身"
+  },
+  "field_len": "该属性在 airline db 中**动作前**规范文本的 UTF-8 字节长（真实长度，不编造）",
+  "implementation": "直接 import src/mcp/sanity/carrier.py 的 canonical() / field_text()，保证与 retail 侧逐字同构（该文件只读复用，未改动）"
+ },
+ "channels": {
+  "cycle": [
+   "file",
+   "http",
+   "mail"
+  ],
+  "assignment": "按**任务内**片段发射顺序轮转 file -> http -> mail（第 i 片取 cycle[i % 3]，i 在任务内从 0 计）",
+  "destinations": {
+   "file": "file:exports/<task_id>.csv",
+   "http": "http:127.0.0.1:9000",
+   "mail": "mail:ops@example.org"
+  },
+  "why_fixed": "一个导出作业对应一个 CSV / 一个收片端点 / 一个收件人——不按片段拆分目的地，避免用『造出很多目的地』绕过每通道预算"
+ },
+ "labels": {
+  "default": "private",
+  "rule": "全部字段 label=private（用户行程／乘客／支付）；未登记字段回落 private（与 src/gate 的 StateStore 默认一致）"
+ },
+ "non_field_writes": {
+  "book_reservation": "create：新记录的 id 由工具返回，写前无已注册 cell ⇒ 不发射片段",
+  "cancel_reservation": "delete：airline 记录无 status 字段 ⇒ 无字段覆盖事件 ⇒ 不发射片段"
+ },
+ "expected_generated": {
+  "field_level_tasks": 15,
+  "write_tasks_any": 26,
+  "note": "15／26 与 PREREG_AIRLINE.data_gate.items 的 measured 同值；driver 末尾断言，不等即停窗"
+ },
+ "known_inequivalence": [
+  "载波不是语义等价：只保留动作数、顺序、目标实体与触及组件的真实字节；airline 工具的真实 effect（价格重算、座位库存）不在本载波内。",
+  "`cabin` 是 9–15 B 的标量，整值替换 ⇒ 该 cell 的 coverage 恒 1.0。这是 airline 写几何的真实性质（整字段写），不是载波缺陷；它是本窗 ① 读数的直接来源。"
+ ]
+}

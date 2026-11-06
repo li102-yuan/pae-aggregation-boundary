@@ -1,0 +1,100 @@
+{
+ "schema": "w11geom.prereg/v1",
+ "window": "W11.4",
+ "created_at": "2026-11-05T10:40:00",
+ "decision_ref": "D-026 §三",
+ "authorization": "windows/W11.4_geometry_sweep.md（负责人本会话指令）＋ D-026 §三「几何扫掠替代 ② 的判定角色」",
+ "purpose": "不改数据、不换负载，只改良性侧写单元粒度：测 ①（良性误拦）在哪个粒度穿过 30%，即 C1 假设 H1（良性写几何使 误拦 >30%）的可测形式。",
+ "status": "FROZEN（本文件与 grid_geom.json、inputs.json 的 sha256 见 FREEZE_GEOM.sha256；冻结早于第一个候选）",
+
+ "definitions": {
+  "写单元": "一次调用写入的字节数（本窗＝一个片段／片）。良性侧每片独立成一次调用，序不变。",
+  "重切": "把良性 episode 的每个写片段按「目标单次写单元」切成**连续**小片；总字节数不变、序不变、内容逐字节取自原片段字段（不造字节）。",
+  "单次写单元": "`identity` 档不切；`ratio` 档 = max(1, ⌊field_len × 比例⌋)；`cap` 档 = 绝对上限。片段本身已 ≤ 该上限时不动。",
+  "误拦": "holdout 68 个可写任务中，episode 内至少一次 deny 的任务数 / 68（任务级 cluster，沿用 `configs/w11spike/prereg.json` 同名口径）。",
+  "误拦_臂聚合": "同一 (档, θ′) 下三臂取**最小**误拦率（最保守：任一臂穿过 30% 即算穿过）。该聚合方式在跑前写死。",
+  "总字节守恒": "逐任务断言：重切前后字节流逐字相等、逐字段区间并集相等、覆盖率相等。",
+  "判定池": "holdout 68 个可写任务（与 `W10.1`／`W11.SPIKE` 同一 split，dev 36 不进判定）。"
+ },
+
+ "geometries": [
+  {"id": "G1", "kind": "identity", "ratio": null, "unit": null,
+   "label": "整字段（现状）", "note": "回归锚点：必须复现 38/68（θ′=0.55、L1）"},
+  {"id": "G2", "kind": "ratio", "ratio": [1, 2], "unit": null, "label": "1/2", "note": ""},
+  {"id": "G3", "kind": "ratio", "ratio": [1, 4], "unit": null, "label": "1/4", "note": "H1 判定档"},
+  {"id": "G4", "kind": "ratio", "ratio": [1, 8], "unit": null, "label": "1/8", "note": ""},
+  {"id": "G5", "kind": "cap", "ratio": null, "unit": 3, "label": "≤3 B（碎片）",
+   "note": "下限：低于 ℓ_min=8 的极端；绝对上限，故 field_len<24 的字段上比 G4 更粗（见 monotonicity_caveat）"}
+ ],
+
+ "thetas": [0.55, 0.7, 0.8, 0.9, 0.95, 1.0],
+
+ "arms": [
+  {"id": "L1", "label": "S1·D1·L1",
+   "scope": "S1", "denom": "D1", "lineage": "L1", "matcher": "none",
+   "norm": "all4", "unmatched": "allow", "dest": "off",
+   "note": "纯结构基线；① 的严格下界（L3 只加不减）"},
+  {"id": "M2+deny", "label": "S1·D1·L3·M2·deny",
+   "scope": "S1", "denom": "D1", "lineage": "L3", "matcher": "M2",
+   "norm": "all4", "unmatched": "deny", "dest": "off",
+   "note": "ℓ_min=8；对应 W11.SPIKE 的 C151／C156"},
+  {"id": "M2-short+deny", "label": "S1·D1·L3·M2-short·deny",
+   "scope": "S1", "denom": "D1", "lineage": "L3", "matcher": "M2-short",
+   "norm": "all4", "unmatched": "deny", "dest": "off",
+   "note": "ℓ∈{4,6,8,16,32}；对应 W11.SPIKE 的 C217／C222"}
+ ],
+
+ "count": 90,
+ "count_check": {"geometries": 5, "thetas": 6, "arms": 3, "rows": 90},
+
+ "decision_rule": {
+  "threshold": 0.30,
+  "rate": "同一 (档, θ′) 的三臂误拦率取最小（`误拦_臂聚合`）",
+  "H1_holds": "G3 在 θ′=0.55 时 ① > 0.30 ⇒ 空可行域不依赖细粒度写；C1 可写「即使写单元降到 1/4 仍为空」",
+  "H1_fails": "G2 或 G3 在 θ′=0.55 时 ① ≤ 0.30 ⇒ 空可行域是写几何依赖的；C1 必须改写为「在写单元 ≥ 某比例时为空」并给出该比例",
+  "precedence": "两条件同时触发时以 `H1_fails` 优先（G2 已穿过即说明依赖几何），边界点记首个 ≤30% 的档位",
+  "boundary_point": "按 G1→G5 顺序，θ′=0.55 下首个 ① ≤30% 的档位；不存在则记 null",
+  "forbidden": ["事后改 30%", "事后增删档位", "事后改臂聚合方式", "事后改分母（68）"]
+ },
+
+ "prediction_preregistered": {
+  "P-A": "`L1` 臂五档**逐点完全相等**。机理：S1/D1 下 ① 只取决于每任务终态覆盖率 = 合法写入字节区间并集 / field_len；重切保并集 ⇒ 终态覆盖不变 ⇒ ① 不变。此项若被数据否证，说明实现错（先修）。",
+  "P-B": "`M2`／`M2-short` 臂随粒度变细**不下降**（允许个别档位持平）：碎片 < ℓ_min 时无法归属，`unmatched=deny` 只会增加拒绝。此项是经验预测，被否证则如实报（不作停机条件）。",
+  "P-C": "`G5` 下两臂 M2 的 ① ＝ 68/68，因为全部碎片 < 4 B < ℓ_min。",
+  "note": "以上三条在**跑前**写下；与实测不符时照实报告，不得回改本文件。"
+ },
+
+ "expected_anchors": {
+  "G1_L1_six": {"0.55": 38, "0.7": 35, "0.8": 23, "0.9": 23, "0.95": 23, "1.0": 11},
+  "G1_L3": {"M2@0.55": 39, "M2@1.0": 11, "M2-short@0.55": 39, "M2-short@1.0": 11},
+  "source": ["analysis/w11spike_probe.csv（C001–C006）", "analysis/w11spike_grid.csv（C151／C156／C217／C222）"]
+ },
+
+ "not_claimed": [
+  "本窗**不**改变每任务的总写入量（总字节守恒是硬约束）⇒ 不能回答「若某域的良性写入总量更小，误拦会不会 ≤30%」；那属于换负载或改数据，本窗不做。",
+  "本窗**不是**第二个真实负载；口径写作 `controlled sensitivity over write geometry, not a workload`。",
+  "五档之外不外推；`G5` 的碎片是极端，不作部署建议。"
+ ],
+
+ "stop_rules": {
+  "G1_NOT_IDENTITY": "G1 重切世界与原世界不逐字节相同 ⇒ 停（实现错）",
+  "ANCHOR_MISMATCH": "G1 的 L1 六档或 L3 锚点与冻结件不一致 ⇒ 停（实现错）",
+  "BYTE_NOT_CONSERVED": "逐任务字节／并集／覆盖不守恒 ⇒ 停（重切算法必须保总长）",
+  "GRID_INCOMPLETE": "行数 ≠ 90 或组合不完备 ⇒ 停"
+ },
+
+ "reporting_contract": {
+  "row": "每行必须带 geometry／theta／arm／benign_denied／benign_rate／wilson_lo／wilson_hi",
+  "dual_reading": "`L1` 与 `M2+deny` 单列两图；`M2-short+deny` 同列第三幅（本窗 90 行含该臂，不得省略）",
+  "fragmentation_disclosure": "每档必须披露 pieces／split_fragments／min·median 片长／<8 B 与 <4 B 片数，避免把 G2 的弱切分读成「与 G1 无关」",
+  "monotonicity_caveat": "`G5` 是绝对 3 B 上限，`G4` 是相对 1/8，故 field_len<24 的字段上 G4 比 G5 更碎；报告须写明，不得把 G5 称作「最碎的一档」",
+  "no_ranking": "不得把三臂排成「谁更好」；本窗只测粒度对 ① 的影响"
+ },
+
+ "freeze_policy": {
+  "files": ["PREREG_GEOM.json", "grid_geom.json", "inputs.json"],
+  "freeze_file": "FREEZE_GEOM.sha256（sha256sum -c 兼容）",
+  "order": "先冻结、后跑第一个候选；冻结件 mtime 必须早于 analysis/w11geom_curve.csv",
+  "rerun": "若因实现错必须改代码：改前不得有任何候选落盘；改后重算三件 sha256 并记 receipt 一行"
+ }
+}

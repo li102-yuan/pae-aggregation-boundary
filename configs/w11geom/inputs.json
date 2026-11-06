@@ -1,0 +1,60 @@
+{
+ "schema": "w11geom.inputs/v1",
+ "window": "W11.4",
+ "created_at": "2026-11-05T10:45:00",
+ "note": "本表只登记**输入件**与**代码**的 sha256，用于「跑的是哪一版」的可审计性；判定参数在 PREREG_GEOM.json，行清单在 grid_geom.json。三件（PREREG_GEOM／grid_geom／inputs）的 sha256 见 FREEZE_GEOM.sha256。",
+ "data": {
+  "retail_db": {"path": "configs/sanity/data/retail_db.json", "bytes": 2811616,
+                "sha256": "413a65160adbdb5fde0ffc0015c49b6d70250b10c18128de169b597af7766765"},
+  "carrier_v2": {"path": "configs/w101/carrier_v2.json", "bytes": 8667,
+                 "sha256": "3eb706a842506f3eff65f09d9c24e30e28815b6520b231eebf4125e7230d8830"},
+  "split_w101": {"path": "configs/w101/split_w101.json", "bytes": 5184,
+                 "sha256": "dc6a4538a48b81904b99ec7583c388bbb2d840f6ae21c2324299b54d1d4c1ab5"},
+  "w101_coverage": {"path": "analysis/w101_coverage.csv", "bytes": 112195,
+                    "sha256": "a21bdd4cbaa3aae903f23eea9bd03a9ffd0c6f53d7dd5f6c04f59a1266d50139"}
+ },
+ "spike_reference": {
+  "note": "只读：`configs/w11spike/*` 与 `analysis/w11spike_*` 本窗一字节不改",
+  "prereg": {"path": "configs/w11spike/prereg.json", "bytes": 11391,
+             "sha256": "e006add22db5fffd7f27e68920371231c3a0cd183bcfcfd9e5507fe7377bc552"},
+  "grid": {"path": "configs/w11spike/grid.json", "bytes": 77878,
+           "sha256": "2b904e042e82115fba50253e41f5b33d8a283c1dfacbfa426fd8f376972b9330"},
+  "freeze": {"path": "configs/w11spike/FREEZE_W11SPIKE.sha256", "bytes": 232,
+             "sha256": "0dc13772789643011a33e0d48b1553bcf937fccecd672179f832a345c5e15b37"},
+  "probe_csv": {"path": "analysis/w11spike_probe.csv", "bytes": 3908,
+                "sha256": "04787ce3219527128bb589984dd8b2e7efff3431d46647273b45b4ec10129925"},
+  "grid_csv": {"path": "analysis/w11spike_grid.csv", "bytes": 41925,
+               "sha256": "6970afeb7e5974b9515e1918988e195cc6be512d7908a12a9d90e528ccff1231"}
+ },
+ "code_reused": {
+  "note": "只读复用（原文件零改动）",
+  "w11_data": {"path": "src/spike/w11_matching/data.py",
+               "sha256": "213dcc113eec0d78c6bbb5506e8fc8a9bc263b21d18bc49ec1d157cdee49922a"},
+  "w11_gate": {"path": "src/spike/w11_matching/gate.py",
+               "sha256": "da4156ef527b7077d84c7ef6cb05c562899ac3bdb8506a5b7827248623de42d7"},
+  "w11_matching": {"path": "src/spike/w11_matching/matching.py",
+                   "sha256": "b37129cb34bea9afae3caf9b7ed5ca639cae8fbc84bafd0d19c0e299d8f97771"},
+  "w11_common": {"path": "src/spike/w11_matching/common.py",
+                 "sha256": "2a0dad60cb8771916779a402b5d0271dc175b40e0a82109420121f020d301883"},
+  "history": {"path": "src/gate/history.py",
+              "sha256": "6ce31ed4faac48341bdb8bb64dcbf8edea453f83f9b7ef5f88bf1ab64e903131"}
+ },
+ "code_w11geom": {
+  "init": {"path": "src/spike/w11geom/__init__.py",
+           "sha256": "bb6a57b238f359a2110494e3c87cd67ae87b2289724fd9c1b48f391f547ff3b0"},
+  "recut": {"path": "src/spike/w11geom/recut.py",
+            "sha256": "9b8d8734f0c505e6ed2265e01acf5f0a8ba08923b17ebdfa38b36226291a6e1a"},
+  "run_geom": {"path": "src/spike/w11geom/run_geom.py",
+               "sha256": "6334e89d004518356f3b0991b36a3747cc3d2a3cb87da36d5468e958657a3d49"}
+ },
+ "configs": {
+  "prereg_geom": {"path": "configs/w11geom/PREREG_GEOM.json",
+                  "sha256": "3c91dc11f94d41477b09fba10de2770f028d200726e04ab6946adc7a9ce78e79"},
+  "grid_geom": {"path": "configs/w11geom/grid_geom.json",
+                "sha256": "8d9a0ce3678fe675a0f330fbf95657e835c2a81b905d93747e94a9d5cb72bd0b"}
+ },
+ "frozen_trees_untouched": ["src/gate", "configs/policy", "configs/w101", "configs/w102",
+                            "configs/sanity", "configs/w11spike", "analysis/w11spike_*",
+                            "scenarios"],
+ "zero_model_calls": "进程内 socket.connect／connect_ex 替换为记账+拒绝（`common.GUARD`）；不 import 任何模型客户端"
+}
