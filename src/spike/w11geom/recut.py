@@ -11,7 +11,6 @@ from src.spike.w11_matching.common import SpikeStop
 
 GEOM_ORDER = ("G1", "G2", "G3", "G4", "G5")
 
-# 与 `PREREG_GEOM.json` 的 `geometries` 逐字对应；`run_geom` 会先断言两者一致。
 GEOM = {
     "G1": {"kind": "identity", "ratio": None, "unit": None},
     "G2": {"kind": "ratio", "ratio": [1, 2], "unit": None},
@@ -22,7 +21,6 @@ GEOM = {
 
 
 def unit_for(spec, field_len):
-    """该字段在本档下的单次写单元（字节）。`None` ＝ 不切。"""
     kind = spec["kind"]
     if kind == "identity":
         return None
@@ -35,7 +33,6 @@ def unit_for(spec, field_len):
 
 
 def split_fragment(frag, unit):
-    """→ [Frag]；连续切、偏移同步平移、内容取自原片段切片。`unit=None` 或片已够小则原样。"""
     if unit is None or frag.length <= unit:
         return [frag]
     pieces, start = [], 0
@@ -57,7 +54,6 @@ def split_fragment(frag, unit):
 
 
 def recut_episode(episode, spec, field_len):
-    """一 episode → 重切后的 episode；一片一次调用（序 = 原序）。"""
     calls = []
     for call in episode.calls:
         for frag in call:
@@ -76,7 +72,6 @@ def _spans_by_key(episode):
 
 
 def check_conservation(old, new, field_text):
-    """逐 episode 断言：①字节流逐字相等 ②逐字段区间并集相等 ③覆盖相等 ④内容取自字段。"""
     if len(old.episodes) != len(new.episodes):
         raise SpikeStop("重切后 episode 数变了")
     checked = {"episodes": 0, "fragments": 0, "bytes": 0, "keys": 0}
@@ -143,7 +138,6 @@ def _stats(geometry, old, new, spec=None):
 
 
 def recut_world(world, geometry):
-    """→ (新 World, 统计)。`field_len` / `field_text` 原样带给匹配器（索引建在字段上，不建在片段上）。"""
     spec = GEOM[geometry]
     episodes = [recut_episode(ep, spec, world.field_len) for ep in world.episodes]
     new = data.World(name=f"{world.name}/{geometry}", episodes=episodes,
@@ -157,7 +151,6 @@ def recut_world(world, geometry):
 
 
 def selftest():
-    """冻结前自检：只做重切层的守恒断言，**不跑任何判定**（不产生候选读数）。"""
     world = data.load_benign()
     report = []
     base = None

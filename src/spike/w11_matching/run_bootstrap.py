@@ -15,8 +15,6 @@ from src.spike.w11_matching.common import SpikeStop
 THETAS = (0.55, 0.7, 0.8, 0.9, 0.95, 1.0)
 SCOPES = (("S1", "D1"), ("S2", "D1"), ("S2", "D2"), ("S3", "D1"), ("S3", "D2"))
 
-# FIX-1：计数断言。FIX-5（G-G 段）落地时与结构改动**同一处**改成 234/110/102。
-# 禁止为了让断言通过改这里的数字去迁就实际值（那等于把闸门拆了）。
 EXPECT = {"grid": 234, "adversary": 110, "go_eligible": 102}
 
 ROLES = {
@@ -61,8 +59,6 @@ def _combo(stage, scope, denom, lineage, theta, matcher="none", norm="all4",
         "scope": scope, "denom": denom, "lineage": lineage, "theta": theta,
         "matcher": matcher, "norm": norm, "unmatched": unmatched, "dest": dest,
         "label": rule.label(), "oracle": rule.is_oracle(),
-        # FIX-2：`deployable` 原义不动（含 D2 的 oracle 分母行）。`go_eligible`
-        # 是 go/no-go 的唯一统计池：非 oracle、非明文、非能力隔离、非 oracle 分母。
         "deployable": (matcher in ("M2", "M2-short") and lineage in ("L3", "L3c")
                        and dest != "cell"),
         "go_eligible": (matcher in ("M2", "M2-short") and lineage in ("L3", "L3c")
@@ -92,9 +88,6 @@ def build_grid():
     for dest in ("chan", "cell"):
         for theta in THETAS:
             rows.append(_combo("G-F", "S1", "D1", "L3", theta, matcher="M2", dest=dest))
-    # FIX-5：G-G ＝ M2-short（ℓ∈{4,6}）× L3 × {allow,deny} × S1/S2/S3(D1) × 6θ = 36 行。
-    # 语义：灵敏度修复——把最小窗口降到 4/6 字节，越过 ℓ_min=8 的算术天花板；
-    # 代价是短窗口误匹配率上升，必须逐组合报（prereg.definitions.误匹配率）。
     for unmatched in ("allow", "deny"):
         for (scope, denom) in (("S1", "D1"), ("S2", "D1"), ("S3", "D1")):
             for theta in THETAS:
@@ -106,11 +99,6 @@ def build_grid():
 
 
 def adversary_set(rows):
-    """C-A／C-B／C-C 的「逐候选」范围：可上线的非 oracle 候选 + dest=cell 单列 + G-G。
-
-    `dest=cell` 只取 θ′∈{0.55,1.0} 两端点（判定在 θ′ 上单调，端点包住区间）；
-    不为凑窗口文字的 78 加那 4 行（W0.3 `R-1`）。
-    """
     out = []
     for row in rows:
         if row["stage"] in ("G-B", "G-C") and (row["scope"], row["denom"]) in (
@@ -125,16 +113,10 @@ def adversary_set(rows):
 
 # ---------------------------------------------------------------- FIX-3：S-4
 def _spans(hits):
-    """匹配结果的规范形：排序后的 `(cell, offset, length)`，用于逐字节比对。"""
     return sorted((key[0], key[1], off, length) for (key, off, length) in hits)
 
 
 def s4_agreement(world_benign, world_mal):
-    """`S-4`：M2 与 M1 的匹配区间逐字节一致率。**分母 = matchable**（len ≥ min(ELLS)）。
-
-    按**全片段**口径算是 160/188 = 85.1%，会触发主窗 §11 的"修实现／停"——那是**假停机**
-    （M2 没实现错，是 6 B 片段短于 ℓ_min=8）。`rate_all` 只披露，不作门禁。
-    """
     out = {}
     for name, world in (("benign", world_benign), ("malicious", world_mal)):
         m1 = matching.build("M1", world.field_text)
@@ -162,7 +144,6 @@ def s4_agreement(world_benign, world_mal):
             "structurally_unmatchable": unmatch,
             "unmatchable_lens": sorted(set(short_lens)),
             "rate_all": (same / len(items)) if items else None,
-            # 集合相等断言（不是只比个数）：未匹配的片段必须**恰好**是全部 len<8 的片段
             "unmatchable_set_equals_short_set": sorted(short_ids) == sorted(all_short_ids),
             "unmatchable_ids": [f"{items[i][0]}#{items[i][1]}" for i in short_ids],
             "unmatchable_episodes": sorted({items[i][0] for i in short_ids}),
@@ -212,7 +193,6 @@ def main():
     if m0["benign_mismatch_n"]:
         raise SpikeStop("BASELINE_MISMATCH（M0 良性）：" + "; ".join(m0["benign_mismatch"]))
 
-    # FIX-3：S-4 正式落盘（分母＝matchable；不过即 SpikeStop）
     s4 = s4_agreement(benign, mal)
     print(f"[W11.SPIKE] S-4：benign {s4['benign']['byte_identical']}/"
           f"{s4['benign']['matchable']}、malicious {s4['malicious']['byte_identical']}/"
@@ -220,7 +200,6 @@ def main():
           f"{s4['malicious']['structurally_unmatchable']} "
           f"lens={s4['malicious']['unmatchable_lens']}", flush=True)
 
-    # ---- 控制臂的**结构**前置（本窗只登记，不判定；M1/M2 实跑归 §5 步骤 4）----
     match_smoke = {}
     for name in ("M1", "M2", "M2-null"):
         matcher = matching.build(name, benign.field_text)
@@ -243,7 +222,6 @@ def main():
     grid = build_grid()
     adv = adversary_set(grid)
     go_eligible = [row for row in grid if row["go_eligible"]]
-    # FIX-1／FIX-5：计数断言（不改期望值去迁就实际值）
     assert len(grid) == EXPECT["grid"], f"grid {len(grid)} != {EXPECT['grid']}"
     assert len(adv) == EXPECT["adversary"], f"adversary {len(adv)} != {EXPECT['adversary']}"
     assert len(go_eligible) == EXPECT["go_eligible"], (

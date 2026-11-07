@@ -8,7 +8,7 @@ import json
 from src.spike.w11_matching import common, counters, data, gate, matching
 
 CA_N = (2, 3, 4, 5, 6)
-CB_BASE = (6, 2)                 # 6＝窗口原文；2＝让「末片」足够大，1/2/3/4 B 才有区分度
+CB_BASE = (6, 2)
 CB_CHUNK = (1, 2, 3, 4)
 CC_ORDER = list(counters.TRANSFORMS)
 
@@ -20,7 +20,6 @@ FIELDS = [
 
 
 def variants():
-    """→ [(counter, param, Episode 构造器)]；全部不依赖 combo。"""
     out = []
     for n in CA_N:
         out.append(("C-A", f"n={n}",
@@ -30,7 +29,6 @@ def variants():
             out.append(("C-B", f"base{base}/chunk{chunk}",
                         lambda ep, sec, base=base, chunk=chunk:
                         counters.build_cb(ep, sec, base, chunk)))
-    # C-B*：对抗最优读法（首片 L-chunk，尾 chunk 字节单独提交）——判定以它为准
     for chunk in CB_CHUNK:
         out.append(("C-B*", f"head=L-{chunk}",
                     lambda ep, sec, chunk=chunk: counters.build_cb_head(ep, sec, chunk)))
@@ -49,7 +47,6 @@ def families(episodes):
 
 
 def check_g_ca(rows, mal, matchers, cap_m, fams):
-    """G-CA：C-A(n=2) 必须与现有 F1／F7 构造逐调用一致。"""
     bad, checked = [], 0
     for row in rows:
         matcher = matchers[row["matcher"]]
@@ -89,8 +86,6 @@ def main():
     frozen = [by_id[c] for c in grid["adversary_combos"]]
     if len(frozen) != 110:
         raise common.SpikeStop(f"冻结反制池 {len(frozen)} != 110")
-    # 冻结池（110）**未覆盖全部 go_eligible**：缺 G-D 18／G-E 6／G-F(chan) 6。
-    # 冻结件不得改，故把这 30 行作为**补跑**加进来（只加攻击、不改任何阈值）。
     covered = {r["combo_id"] for r in frozen}
     supplement = [r for r in grid["combos"] if r["go_eligible"] and r["combo_id"] not in covered]
     if len(supplement) != 30:
@@ -124,7 +119,6 @@ def main():
                   flush=True)
         raise common.SpikeStop("G-CA 失败：C-A(n=2) 与现有 F1/F7 构造不一致")
 
-    # ---- 主循环 ----
     out = []
     for i, (row, pool) in enumerate(rows, 1):
         matcher = matchers[row["matcher"]]
@@ -156,7 +150,6 @@ def main():
         if i % 10 == 0 or i == len(rows):
             print(f"[{i}/{len(rows)}] {row['combo_id']} {row['label']}", flush=True)
 
-    # ---- C-B**（θ′ 自适应上界攻击）：画 frontier ----
     frontier = []
     for row, pool in rows:
         matcher = matchers[row["matcher"]]
@@ -185,7 +178,6 @@ def main():
                       "head_len_mean", "n", "rate", "H_max", "residual_bits_min",
                       "residual_bits_mean"])
 
-    # ---- 汇总：C-B 矩阵 ＋ 逐行判定 ----
     def cell(combo, counter, param, fam):
         for r in out:
             if (r["combo_id"], r["counter"], r["param"], r["family"]) == (combo, counter, param, fam):

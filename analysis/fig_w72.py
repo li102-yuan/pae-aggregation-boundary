@@ -25,13 +25,12 @@ TAB = ROOT / "paper" / "tables"
 FIG.mkdir(parents=True, exist_ok=True)
 TAB.mkdir(parents=True, exist_ok=True)
 
-# ---- 判据门槛（PREREG go_no_go / D-023 §五；判据常量，非实验数据）----
-GATE_MISFIRE = 30.0        # ① 良性误拦 ≤30%
-GATE_INTERCEPT = 90.0      # ②③ 攻击拦截 ≥90%
-GATE_RESIDUAL = 24         # ⑤ 标称剩余不确定性 ≥24 bit（运行判据）
+GATE_MISFIRE = 30.0
+GATE_INTERCEPT = 90.0
+GATE_RESIDUAL = 24
 GATE_H = 0.5               # ⑤ partial-leakage fraction ≤0.5
-GATE_CC_MISS = 0.10        # ④ covered 漏匹配 <10%
-L_MIN = 8                  # M2 匹配臂最小可归属片段长度（机制参数）
+GATE_CC_MISS = 0.10
+L_MIN = 8
 
 plt.rcParams.update(
     {
@@ -50,10 +49,8 @@ plt.rcParams.update(
         "legend.frameon": False,
         "pdf.fonttype": 42,
         "ps.fonttype": 42,
-        # 文本保留为 <text> 节点（不用 path），闸门 1 才能正则扫描图内文字；
-        # 提交用的是 PDF（fonttype 42 内嵌子集），SVG 仅作矢量备份与自检对象。
         "svg.fonttype": "none",
-        "svg.hashsalt": "fig_w72-stable",  # 固定盐：SVG 内部 id 确定性（重跑字节一致）
+        "svg.hashsalt": "fig_w72-stable",
     }
 )
 
@@ -72,12 +69,10 @@ def fmt_bits(v):
 
 
 CJK_RE = re.compile(r"[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uff00-\uffef]")
-# 图内不得出现的串：内部数据路径、内部窗口/数据集代号、旧的小数位口径
 BAD_SUBSTR = ("analysis/", "reports/", ".csv", "w11spike", "w11geom", "w11airline", "55.88")
 
 
 def svg_text(path):
-    """取 SVG 的文本节点内容（<text>…</text>，含 tspan）；svg.fonttype=none 时可用。"""
     raw = path.read_text(encoding="utf-8")
     nodes = re.findall(r"<text[^>]*>(.*?)</text>", raw, flags=re.S)
     return " ".join(re.sub(r"<[^>]+>", " ", n) for n in nodes)
@@ -91,11 +86,6 @@ def pdf_text(path):
 
 
 def assert_figure_text_clean(stem, svg_path, pdf_path):
-    """闸门 1：图内零中文、零内部路径；口径文本统一（55.9 而非 55.88）。
-
-    三处都查：SVG 文本节点（源）、PDF 文本层（提交件）、以及 SVG 原始字节
-    （防止文本被 <title>/<desc> 之类节点藏起来）。
-    """
     s_txt = svg_text(svg_path)
     p_txt = pdf_text(pdf_path)
     assert s_txt.strip(), f"{stem}: SVG 无文本节点（svg.fonttype 应为 none）"
@@ -111,8 +101,6 @@ def save(fig, stem):
     svg_path = FIG / f"{stem}.svg"
     pdf_path = FIG / f"{stem}.pdf"
     fig.savefig(svg_path, metadata={"Date": None})
-    # Windows 下 matplotlib 以文本模式写 SVG，会落 CRLF；AGENTS 要求 LF，
-    # 且 CRLF 会让 git 归一化后与重跑结果不逐字节一致（README 里的 sha256 会失配）。
     svg_path.write_bytes(svg_path.read_bytes().replace(b"\r\n", b"\n"))
     fig.savefig(
         pdf_path,
@@ -133,14 +121,12 @@ def despine(ax, keep_right=False):
 
 
 # =====================================================================
-# 数据装载与派生（全部读自 CSV，不做任何数值改写）
 # =====================================================================
 grid = read_csv("w11spike_grid.csv")
 frontier = read_csv("w11spike_frontier.csv")
 geom = read_csv("w11geom_curve.csv")
 controls = read_csv("w11spike_controls.csv")
 
-# ---- fig1 左轴：G-A 段 S1/D1/L1 探针（C001–C006，holdout 68）----
 probe = [
     r
     for r in grid
@@ -153,7 +139,6 @@ probe.sort(key=lambda r: fnum(r["theta"]))
 assert len(probe) == 6, f"probe rows = {len(probe)}"
 misfire = [(fnum(r["theta"]), fnum(r["benign_rate"]) * 100.0, int(r["benign_denied"]), int(r["benign_n"])) for r in probe]
 
-# ---- fig1 右轴 / tab1 残熵·H：C-B**（D-025 §二-1），C031–C036（M1 臂）----
 cb_rows = [
     r
     for r in frontier
@@ -173,7 +158,6 @@ cb_series = sorted(
 )
 assert len(cb_series) == 6, f"C-B** theta levels = {len(cb_series)}"
 
-# ---- tab1 行：C151–C156（G-D：S1/D1/L3，M2，unmatched=deny）----
 tab1_rows = [
     r
     for r in grid
@@ -188,7 +172,6 @@ tab1_rows.sort(key=lambda r: fnum(r["theta"]))
 assert len(tab1_rows) == 6, f"tab1 rows = {len(tab1_rows)}"
 cb_by_theta = {t: (res, H) for t, res, H in cb_series}
 
-# ---- fig3：M2＋allow 臂（G-B）的 matchable/all 分母（算术天花板）----
 ceil_rows = [
     r
     for r in grid
@@ -207,7 +190,6 @@ r0 = next(r for r in ceil_rows if fnum(r["theta"]) == 0.55)
 F1_N, F1_M = int(r0["F1_n"]), int(r0["F1_match_n"])
 F7_N, F7_M = int(r0["F7_n"]), int(r0["F7_match_n"])
 
-# ---- tab2 行：三条过①②的候选（报告 §7／论文 v2 §3.3(c)）----
 CANDS = ["C156", "C204", "C222"]
 cand_labels = {}
 for cid in CANDS:
@@ -217,11 +199,10 @@ for cid in CANDS:
 assert all(cand_labels[c]["go_eligible"] == "1" for c in CANDS)
 
 COVERED_PREFIX = "covered:"
-Z95 = 1.959964  # 95% 正态分位数（判据常量）
+Z95 = 1.959964
 
 
 def wilson_upper(k, n):
-    """Wilson 95% 上界（A2：任何 0/n 必须给上界，禁止裸写 0）。"""
     if n <= 0:
         return float("inf")
     p = k / n
@@ -235,7 +216,6 @@ tab2_data = {}
 
 
 def min_rate_with_upper(rows, counter):
-    """该 counter 的最小率；率为 0 时附 Wilson 95% 上界（A2：0/n 不得裸写）。"""
     sel = [r for r in rows if r["counter"] == counter]
     assert sel, counter
     best = min(sel, key=lambda r: fnum(r["rate"]))
@@ -255,7 +235,6 @@ for cid in CANDS:
         if r["counter"] == "C-C" and r["param"].startswith(COVERED_PREFIX)
     ]
     cc = max((fnum(r["miss_rate"]) for r in covered), default=0.0)
-    # A2：0/n 读数附 Wilson 95% 上界（取最保守者 = 各 covered 行上界的最大值）
     cc_u = max(
         (wilson_upper(round(fnum(r["miss_rate"]) * int(r["n"])), int(r["n"])) for r in covered),
         default=float("inf"),
@@ -284,8 +263,6 @@ for cid in CANDS:
 
 # =====================================================================
 # fig1_frontier —— misfire / nominal-uncertainty frontier (dual y axis)
-#   左轴＝真实负载误拦（C001–C006 探针族）；右轴＝构造内标称剩余不确定性（C031–C036）。
-#   图内不放数据路径（闸门 1），行族说明进 LaTeX caption。
 # =====================================================================
 fig, axL = plt.subplots(figsize=(3.3, 2.75))
 fig.subplots_adjust(left=0.152, right=0.848, bottom=0.285, top=0.97)
@@ -307,9 +284,7 @@ line_r, = axR.plot(
 
 axL.axhline(GATE_MISFIRE, ls=":", lw=0.8, color="0.65", zorder=1)
 axR.axhline(GATE_RESIDUAL, ls=":", lw=0.8, color="0.65", zorder=1)
-# 门线的符号说明进 LaTeX caption（图内不留文字，避免与两条曲线互相压字）
 
-# 端点直接标注（仅两端，数值由 CSV 格式化；一位小数＝全篇口径 55.9）
 t0, y0, d0, n0 = misfire[0]
 t1, y1, d1, n1 = misfire[-1]
 res1 = cb_series[-1][1]
@@ -334,7 +309,6 @@ save(fig, "fig1_frontier")
 
 # =====================================================================
 # fig2_geometry —— write-granularity invariance (G1–G5, L1 arm, coincident)
-#   灰度安全：纯黑单线＋空心圆 marker，不依赖颜色；五档重合由断言核（坐标不改写）。
 # =====================================================================
 l1 = [r for r in geom if r["arm"] == "L1"]
 geos = sorted({r["geometry"] for r in l1})
@@ -350,8 +324,6 @@ for g in geos[1:]:
 
 fig, ax = plt.subplots(figsize=(3.3, 2.35))
 fig.subplots_adjust(left=0.155, right=0.97, bottom=0.285, top=0.97)
-# 五档坐标逐点全等（上面的断言已核），叠画只会互相遮挡。如实呈现＝画一条黑线，
-# 图例注明「G1–G5 五档重合」；不用颜色，故灰度打印无信息损失。
 ax.plot(
     thetas,
     [p[1] for p in series[geos[0]]],
@@ -378,8 +350,6 @@ save(fig, "fig2_geometry")
 
 # =====================================================================
 # fig3_lmin —— minimum attributable fragment length (matchable ceiling)
-#   y 轴固定 0–100%（闸门要求）；灰柱＝all 分母、深柱＝matchable 分母，
-#   柱色说明进 LaTeX caption（图内不留长注释）。
 # =====================================================================
 fig, ax = plt.subplots(figsize=(3.3, 2.55))
 fig.subplots_adjust(left=0.165, right=0.97, bottom=0.27, top=0.97)
@@ -412,10 +382,6 @@ despine(ax)
 save(fig, "fig3_lmin")
 
 # =====================================================================
-# tab1a_main.tex ＋ tab1b_cost.tex —— 主表拆两面板（附加纪律 B5：≤8 列）
-#   tab1a＝候选与判据：combo/θ′/误拦(union,真实负载)/F1/F7/go_eligible
-#   tab1b＝代价：combo/θ′/残熵(C-B**)/H/误拦 union|unique(真实负载)
-#   表头强制标"构造内 / 真实负载"（附加纪律 B6）
 # =====================================================================
 def tex_escape(s):
     return s.replace("&", "\\&").replace("%", "\\%").replace("_", "\\_")
@@ -425,7 +391,6 @@ def fmt_theta(t):
     return "1.0" if f"{t:g}" == "1" else f"{t:g}"
 
 
-# ---- tab1a：候选与判据 ----
 lines = []
 lines.append("% Generated by analysis/fig_w72.py; every value is read from the CSV inputs, re-running reproduces it.")
 lines.append("% Table 1 (candidate family C151--C156). Table 2 = tab1b_cost.tex; Table 3 = tab2_counters.tex.")
@@ -471,7 +436,6 @@ lines.append(r"\end{minipage}}")
 lines.append(r"\end{table}")
 (TAB / "tab1a_main.tex").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
-# ---- tab1b：代价（残熵/H ＋ union|unique 误拦）----
 lines = []
 lines.append("% Generated by analysis/fig_w72.py. Misfire: grid rows C151--C156. Residual/H: frontier rows C031--C036.")
 lines.append("%   Two different row families, labelled as such in the note; 24 bit is an operating criterion.")
@@ -519,7 +483,6 @@ if old_tab1.exists():
     old_tab1.unlink()
 
 # =====================================================================
-# tab2_counters.tex —— 反制表（C156 / C204 / C222）
 # =====================================================================
 def cell(ok, content):
     return content if ok else "\\textbf{" + content + "}"
@@ -547,7 +510,6 @@ for cid in CANDS:
     r5_ok = d["cbss_res"] >= GATE_RESIDUAL and d["cbss_H"] <= GATE_H
     rw_ok = d["worst_res"] >= GATE_RESIDUAL and d["worst_H"] <= GATE_H
     verdict = "NO" if (not (ca_ok and cb_ok and cc_ok and r5_ok and rw_ok)) else "GO"
-    # A2：0/n 读数附 Wilson 95% 上界（括号内即上界，注里说明）
     ca_cell = f"{d['CA']:.2f}" if d["CA"] else f"0.00 ({d['CA_U']:.3f})"
     cb_cell = f"{d['CB']:.2f}" if d["CB"] else f"0.00 ({d['CB_U']:.3f})"
     cc_cell = f"{d['CC']:.3f}" if d["CC"] else f"0.00 ({d['CC_U']:.3f})"
@@ -584,7 +546,6 @@ lines.append(r"\end{table}")
 (TAB / "tab2_counters.tex").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
 # =====================================================================
-# 回执自检：行数、断言、B4 度量（pymupdf 量框宽/最小字号）、字节一致性
 # =====================================================================
 def sha(p):
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()[:16]
@@ -602,7 +563,6 @@ print(f"tab1a/tab1b: w11spike_grid.csv G-D/S1/D1/L3/M2/deny = {len(tab1_rows)} r
 print(f"tab2: w11spike_controls.csv {len(CANDS)} candidates x 4 counter families + frontier rows")
 print("FIG_TEXT_GATE=PASS (zero CJK, zero internal paths, 55.9% convention, in all three figures)")
 
-# ---- B4：按最终打印尺寸度量（矢量图不看 dpi，只看框宽与字号）----
 fitz_ver = "n/a"
 try:
     import fitz
@@ -627,7 +587,6 @@ try:
 except ImportError:
     print("B4: pymupdf 未安装，跳过框宽/字号度量（.venv 内 pip install pymupdf 后重跑）")
 
-# ---- B1：版本信息进 README（文件名保持稳定名）----
 import matplotlib
 
 inp = ["w11spike_grid.csv", "w11spike_frontier.csv", "w11geom_curve.csv", "w11spike_controls.csv"]

@@ -15,5 +15,12 @@ tau2-bench release (MIT); all secrets are synthetic.
 - `src/spike/` — deterministic replay, matchers, and the counter suite
 - `paper/figures/`, `paper/tables/` — generated vector figures and LaTeX tables
 
+## Notes on the source
+
+Internal labels such as `W11.SPIKE`, `W7.3`, `D-0xx`, and `FIX-n` are window and decision
+identifiers from the project's pre-registration log, retained for traceability. Some string
+values (data-source descriptions, assertion messages, and decision notes) remain in Chinese,
+the authors' working language; they are part of the frozen inputs and do not affect any output.
+
 ## License
 MIT; see [`LICENSE`](LICENSE).

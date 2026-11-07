@@ -36,7 +36,6 @@ def _try_decode(raw: bytes, encoding: str):
 
 
 def normalizations(raw: bytes, declared: str, mode: str):
-    """→ [(name, bytes)]，按优先级去重。"""
     order = [declared] if mode == "declared" else list(SUPPORTED_ENC)
     if declared not in order:
         order = [declared] + order
@@ -51,7 +50,6 @@ def normalizations(raw: bytes, declared: str, mode: str):
 
 # ---------------------------------------------------------------- M1
 class PlaintextMatcher:
-    """正控制：门持有原字段明文。**不可上线**（等价于把私库明文常驻判定侧）。"""
 
     name = "M1"
 
@@ -93,7 +91,6 @@ class PlaintextMatcher:
 
 # ---------------------------------------------------------------- M2
 class FingerprintMatcher:
-    """候选机制：HMAC-SHA256 盲索引。门**不持明文**，只持指纹表。"""
 
     name = "M2"
 
@@ -149,7 +146,7 @@ class FingerprintMatcher:
             n = len(needle)
             if n == 0:
                 continue
-            for ell in self.ells:                    # 长窗口优先
+            for ell in self.ells:
                 if n < ell:
                     continue
                 table = self.index[ell]
@@ -175,7 +172,6 @@ class FingerprintMatcher:
 
 
 class NullMatcher(FingerprintMatcher):
-    """负控制：key 随机、索引不建。应当几乎全漏。"""
 
     name = "M2-null"
 

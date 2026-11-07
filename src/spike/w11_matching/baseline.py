@@ -9,7 +9,7 @@ from src.spike.w11_matching import common, data, gate
 from src.spike.w11_matching.common import SpikeStop
 
 THETA = 0.55
-MAX_BENIGN = 0.416667       # 冻结件 theta.lower_bound，逐字取自 w32_freeze_v1.json
+MAX_BENIGN = 0.416667
 
 
 def _gate():
@@ -20,7 +20,6 @@ def _gate():
 
 
 def replay_benign_history(world):
-    """用现行 HistoryGate 逐调用重放；返回 {task_id: [(decision, reason, coverage, would_be)]}。"""
     gate_obj = _gate()
     for (entity, field), total in world.field_len.items():
         gate_obj.register_field(entity, field, total)
@@ -78,12 +77,6 @@ def check_benign(world):
 
 
 def check_m0(world_benign, world_mal):
-    """M0：用 `src/observe/ref.py` 独立复算离线 oracle 标签。
-
-    ①良性：每一步 `status()["coverage"]` 必须与 `ref.coverage` 的最大比率逐点相等（1e-12）；
-    ②恶意：F1／F7 的**全部**片段交付后 `ref.reconstructable` 仍为 False（R1=0/72、0/22），
-      而内容级真值为 100%——这就是 R1／R2 分裂的 M0 侧复现。
-    """
     from src.observe import ref as REF
 
     gate_obj = _gate()
@@ -123,7 +116,6 @@ def check_m0(world_benign, world_mal):
 
 
 def check_malicious(world):
-    """L1/S1/D1/θ=0.55：F1／F7 必须全 BYPASS（deny_any=0、内容 100% 交付）。"""
     cap = gate.entity_capacity(world.field_len)
     rule = gate.Rule(scope="S1", denom="D1", lineage="L1", theta=THETA, dest="off")
     by_family = {}

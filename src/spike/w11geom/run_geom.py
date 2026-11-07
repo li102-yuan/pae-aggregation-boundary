@@ -14,7 +14,6 @@ FREEZE_NAME = "FREEZE_GEOM.sha256"
 THRESHOLD = 0.30
 EXPECT_ROWS = 90
 PROBE_EXPECT = {"0.55": 38, "0.7": 35, "0.8": 23, "0.9": 23, "0.95": 23, "1.0": 11}
-# `W11.SPIKE` 的冻结网格（`analysis/w11spike_grid.csv`）——G1 的 L3 臂锚点
 GRID_EXPECT = {("M2+deny", "0.55"): 39, ("M2+deny", "1.0"): 11,
                ("M2-short+deny", "0.55"): 39, ("M2-short+deny", "1.0"): 11}
 
@@ -118,7 +117,6 @@ def by_key(rows):
 
 
 def judge(rows):
-    """按 `PREREG_GEOM.json` 的 `decision_rule` 写死执行；**不改阈值、不改档位**。"""
     at = by_key(rows)
     arms = sorted({r["arm"] for r in rows})
     rate_min = {(g, t): min(at[(g, t, a)]["benign_rate"] for a in arms)
@@ -152,7 +150,6 @@ def judge(rows):
 
 
 def final_coverage(world):
-    """每任务终态覆盖（＝该任务合法写入占字段的比例，重切不变）。"""
     out = []
     for ep in [e for e in world.episodes if e.split == "holdout"]:
         spans = {}
@@ -171,7 +168,6 @@ def final_coverage(world):
 
 
 def analytic(theta_rows):
-    """解析穿越点：①(θ′) = #{任务: 终态覆盖 ≥ θ′}。给出 ①≤30% 所需的 θ′ 下界（开区间）。"""
     covs = sorted((r["final_coverage"] for r in theta_rows), reverse=True)
     n = len(covs)
     k_max = int(n * THRESHOLD)                     # 68 × 0.30 = 20
@@ -182,7 +178,6 @@ def analytic(theta_rows):
             "meaning": f"①(θ′) ≤ 30% ⇔ θ′ > {covs[k_max]}（第 {k_max + 1} 大终态覆盖）"}
 
 
-# ---------------------------------------------------------------- 图
 COLORS = {"G1": "#1f3b73", "G2": "#2e86ab", "G3": "#2f7d4f",
           "G4": "#b8791f", "G5": "#9b3b3b"}
 DASH = {"G1": "", "G2": "7 4", "G3": "2 3", "G4": "10 4 2 4", "G5": "3 5"}
@@ -291,7 +286,6 @@ def plot(rows, path, thetas):
     return path
 
 
-# ---------------------------------------------------------------- 主流程
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="analysis/w11geom_curve.csv")
@@ -316,7 +310,6 @@ def main():
         stats.append(st)
         worlds[g] = world
 
-    # 回归锚点前提：G1 逐字节等于原世界
     g1_pairs = list(zip(ben.episodes, worlds["G1"].episodes))
     if any(len(a.calls) != len(b.calls) for a, b in g1_pairs):
         raise common.SpikeStop("G1 调用数与原世界不同")
@@ -335,7 +328,6 @@ def main():
 
     common.write_csv(common.ROOT / args.out, out, FIELDS)
 
-    # 诊断表：档位清单 + 逐任务终态覆盖
     geom_rows = [{k: v for k, v in st.items() if k != "conservation"} for st in stats]
     common.write_csv(common.ROOT / args.geometry_out, geom_rows,
                      ["geometry", "episodes", "fragments_in", "pieces_out", "split_fragments",
@@ -369,7 +361,6 @@ def main():
     if not all(v["match"] for v in anchor_l3.values()):
         raise common.SpikeStop(f"冻结核对失败：{anchor_l3}")
 
-    # 不变性：L1 臂五档逐点相等；逐任务终态覆盖相等
     inv_ok = all(len({at[(g, t, "L1")]["benign_denied"] for g in recut.GEOM_ORDER}) == 1
                  for t in thetas)
     cov_ok = all(len({r[f"coverage_{g}"] for g in recut.GEOM_ORDER}) == 1 for r in inv)

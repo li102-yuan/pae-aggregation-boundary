@@ -9,11 +9,10 @@ import pathlib
 
 from src.spike.w11_matching import common, data, gate, matching
 
-ENTROPY_BITS_PER_CHAR = 4.0          # state_store_v2.json 全为 hex（16 字符集）
+ENTROPY_BITS_PER_CHAR = 4.0
 
 
 class _UniqueOnly:
-    """`unique` 口径的匹配器代理：多候选一律当未匹配（由上层 `unmatched` 策略处置）。"""
 
     def __init__(self, inner):
         self.inner = inner
@@ -42,7 +41,6 @@ def _min_ell(matcher):
 
 
 def _family(eps, rule, matcher, field_len, cap, min_ell):
-    """→ (all 统计, matchable 统计, union 口径的 intercepted 计数)。"""
     results = [(ep, gate.replay(ep, rule, matcher, field_len, cap)) for ep in eps]
     hs = [r.delivered_truth_bytes / r.truth_len if r.truth_len else 1.0 for _e, r in results]
     bits = [ENTROPY_BITS_PER_CHAR * (r.truth_len - r.delivered_truth_bytes) for _e, r in results]
@@ -76,7 +74,6 @@ def run_row(row, ben, mal, cap_b, cap_m, cache):
                      theta=float(row["theta"]), matcher=row["matcher"], norm=row["norm"],
                      unmatched=row["unmatched"], dest=row["dest"])
 
-    # ---- 良性：holdout 68（union 与 unique 两口径）----
     mb = _matcher(row["matcher"], row["norm"], ben, cache)
     mbu = _UniqueOnly(mb) if mb is not None else None
     holdout = [e for e in ben.episodes if e.split == "holdout"]
@@ -91,7 +88,6 @@ def run_row(row, ben, mal, cap_b, cap_m, cache):
             denied_u += int(r.deny_any)
     lo, hi = _wilson(denied, len(holdout))
 
-    # ---- 恶意：F1 72 / F7 20（dev 单列）----
     mm = _matcher(row["matcher"], row["norm"], mal, cache)
     mmu = _UniqueOnly(mm) if mm is not None else None
     min_ell = _min_ell(mm)
@@ -149,15 +145,12 @@ def run_row(row, ben, mal, cap_b, cap_m, cache):
 
 
 def check_clone_rows(out):
-    """`G-G` 的 `allow`／`deny` 18 对必须读数全等（否则 234 列全等会被当成复制粘贴错）。"""
     gg = {}
     for row in out:
         if row["stage"] == "G-G":
             gg[(row["scope"], row["theta"])] = gg.get((row["scope"], row["theta"]), {})
             gg[(row["scope"], row["theta"])][row["unmatched"]] = row
     diffs = []
-    # `*_unique` 是**诊断口径**（多候选当未匹配），`allow` 与 `deny` 对它的处置本就不同
-    # （回落声明 vs 直接拒），故只对判定路径（union）断言逐列相等。
     skip = {"combo_id", "unmatched", "benign_denied_unique", "benign_rate_unique",
             "F1_intercepted_unique", "F7_intercepted_unique"}
     for key, pair in sorted(gg.items()):

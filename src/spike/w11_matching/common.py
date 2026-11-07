@@ -15,14 +15,11 @@ ANALYSIS = ROOT / "analysis"
 RUNS = ROOT / "runs"
 REPORTS = ROOT / "reports" / "spike"
 
-# 现行 θ 的唯一来源。`configs/gate/history_v1.json` 的 1.0 是 provisional 暂定值，
-# **本模块不读它**（窗口 §2 第 4 条）。
 POLICY = ROOT / "configs" / "policy" / "w32_freeze_v1.json"
 POLICY_SHA = ROOT / "configs" / "policy" / "w32_freeze_v1.sha256"
 THETA_EXPECTED = 0.55
 
 INPUTS = {
-    # ---- 良性侧（68 个 holdout 可写任务）----
     "w101_coverage": ROOT / "analysis" / "w101_coverage.csv",
     "carrier_v2": ROOT / "configs" / "w101" / "carrier_v2.json",
     "retail_db": ROOT / "configs" / "sanity" / "data" / "retail_db.json",
@@ -31,7 +28,6 @@ INPUTS = {
     "source_py": ROOT / "src" / "mcp" / "sanity" / "source.py",
     "split_w101": ROOT / "configs" / "w101" / "split_w101.json",
     "w101_summary": ROOT / "runs" / "bench-w101-cc8300a4de1aa7bb" / "summary.json",
-    # ---- 恶意侧（F1 72 对 / F7 22 对执行、20 判定）----
     "w102_families": ROOT / "configs" / "w102" / "families.json",
     "w102_state_store_v2": ROOT / "configs" / "w102" / "state_store_v2.json",
     "w102_pairs": ROOT / "analysis" / "w102_pairs.csv",
@@ -40,20 +36,18 @@ INPUTS = {
     "families_py": ROOT / "src" / "attack" / "adaptive" / "families.py",
     "construct_py": ROOT / "src" / "attack" / "adaptive" / "construct.py",
     "construct_manifest": ROOT / "scenarios" / "s2b_adaptive" / "construct_manifest.json",
-    # ---- 参考实现（只读）----
     "ref_py": ROOT / "src" / "observe" / "ref.py",
     "history_py": ROOT / "src" / "gate" / "history.py",
     "canonicalizer_py": ROOT / "src" / "gate" / "canonicalizer.py",
     "policy": POLICY,
 }
 
-# 冻结件（G7：这些路径的 git diff 必须为空）
 FROZEN_TREES = ("src/gate", "src/observe/ref.py", "configs/gate", "configs/policy",
                 "configs/w101", "configs/w102", "configs/sanity")
 
 
 class SpikeStop(RuntimeError):
-    """spike 的停机口（对应窗口 §11 的失败出口）。"""
+        pass
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -79,11 +73,6 @@ def write_json(path, obj):
 
 
 def write_json_once(path, obj, ignore_keys=("created_at",)):
-    """（除 `ignore_keys` 外）内容相同则**不写**，保证多次 bootstrap 的字节稳定。
-
-    返回 True 表示真的写了（`configs_rewritten` 记 true），False 表示按原样保留。
-    这是 `W0.3` `R-4` 的落地：不修这个，每次重跑都会重写 `created_at`，冻结白签。
-    """
     path = pathlib.Path(path)
     if path.exists():
         old = json.loads(path.read_text(encoding="utf-8"))
@@ -99,12 +88,6 @@ FREEZE_NAMES = ("inputs.json", "prereg.json", "grid.json")
 
 
 def report_freeze(names=FREEZE_NAMES, out_dir=None, freeze_name="FREEZE_W11SPIKE.sha256"):
-    """把三件当前 sha256 与冻结文件比对 → `OK`／`STALE`／`MISSING`。
-
-    冻结文件格式与 `sha256sum` 兼容（`<hex> *<name>`），因此在
-    `configs/w11spike/` 下 `sha256sum -c FREEZE_W11SPIKE.sha256` 可直接复核。
-    **只报告，不改冻结**：写冻结是运行者的动作（窗口 §FIX-4 第 4 条）。
-    """
     out_dir = pathlib.Path(out_dir) if out_dir is not None else CONFIGS
     lines = [f"{sha256_file(out_dir / name)} *{name}" for name in names]
     freeze_path = out_dir / freeze_name
@@ -127,7 +110,6 @@ def report_freeze(names=FREEZE_NAMES, out_dir=None, freeze_name="FREEZE_W11SPIKE
 
 
 def check_freeze():
-    """入口断言：freeze 必须 `OK`，否则 `SpikeStop`（窗口 §4 FIX-4 第 5 条）。"""
     rep = report_freeze()
     if rep["status"] != "OK":
         raise SpikeStop(f"冻结不一致（{rep['status']}）：{'; '.join(rep['diff']) or rep['freeze']}")
@@ -135,7 +117,6 @@ def check_freeze():
 
 
 def check_signoff(path=None):
-    """入口断言：`SIGNOFF.md` 五格非空且带日期（`D-023`）。"""
     path = pathlib.Path(path) if path is not None else CONFIGS / "SIGNOFF.md"
     if not path.exists():
         raise SpikeStop(f"缺签核文件：{path}")
@@ -175,7 +156,6 @@ def write_csv(path, rows, fields):
     path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
 
-# ---------------------------------------------------------------- 零模型调用证明
 class _Guard:
     def __init__(self):
         self.connect_attempts = 0
@@ -197,7 +177,7 @@ class _Guard:
         def connect_ex(sock, address, *a, **kw):
             guard.connect_attempts += 1
             guard.blocked.append(repr(address))
-            return 111  # ECONNREFUSED，不抛异常但也不建立连接
+            return 111
 
         socket.socket.connect = connect
         socket.socket.connect_ex = connect_ex
@@ -217,7 +197,6 @@ class _Guard:
 
 GUARD = _Guard()
 
-# 模型客户端模块名（只用于自检：本进程从未 import 它们）
 _MODEL_MODULES = ("openai", "anthropic", "dashscope", "zhipuai", "requests",
                   "httpx", "aiohttp", "urllib3", "transformers", "torch")
 

@@ -10,7 +10,6 @@ import json
 from src.spike.w11_matching import common
 from src.spike.w11_matching.common import SpikeStop
 
-# 只读复用（不修改原文件）
 from src.attack.adaptive import families as FAM          # noqa: E402
 from src.mcp.sanity import carrier as CAR                # noqa: E402
 from src.mcp.sanity import source as SRC                 # noqa: E402
@@ -18,7 +17,6 @@ from src.mcp.sanity import source as SRC                 # noqa: E402
 
 @dataclasses.dataclass(frozen=True)
 class Frag:
-    """一次调用里的一个片段。`true_*` 是**内容真实来源**（L2／M0 用），不是声明值。"""
     entity: str
     field: str
     offset: int
@@ -29,7 +27,7 @@ class Frag:
     true_entity: str
     true_field: str
     true_offset: int
-    secret_pos: int | None = None      # 恶意侧：该片在秘密里的起点；良性侧为 None
+    secret_pos: int | None = None
 
     def key(self):
         return (self.entity, self.field)
@@ -41,22 +39,21 @@ class Episode:
     task_id: str
     split: str
     calls: list[list[Frag]]
-    truth_key: tuple[str, str]        # 秘密所在字段（良性＝被写字段；恶意＝目标字段）
+    truth_key: tuple[str, str]
     truth_len: int
-    declared_channels: tuple = ()      # 任务声明的合法目的地（跑前可见）
-    declared_cells: tuple = ()         # 任务声明的合法 cell（＝能力隔离的授权集）
+    declared_channels: tuple = ()
+    declared_cells: tuple = ()
 
 
 @dataclasses.dataclass
 class World:
     name: str
     episodes: list[Episode]
-    field_len: dict[tuple[str, str], int]     # 分母来源（可信长度）
-    field_text: dict[tuple[str, str], bytes]  # M1／M2 的索引源
+    field_len: dict[tuple[str, str], int]
+    field_text: dict[tuple[str, str], bytes]
     meta: dict
 
 
-# ---------------------------------------------------------------- 良性
 def _field_text_of(db, entity, field):
     for table in ("orders", "users"):
         record = db.get(table, {}).get(entity)
@@ -131,7 +128,6 @@ def load_benign():
 
 
 def _episode_of(row, field_len, declared_channels):
-    """truth_key：本次任务里被覆盖字节最多的字段（良性任务可有多个字段）。"""
     totals = {}
     for call in row["calls"]:
         for frag in call:
@@ -144,7 +140,6 @@ def _episode_of(row, field_len, declared_channels):
                    declared_cells=tuple(sorted(totals)))
 
 
-# ---------------------------------------------------------------- 恶意
 def _manifest(pair_id):
     path = common.ROOT / "scenarios" / "s2b_adaptive" / "pairs" / pair_id / "manifest.json"
     return common.load_json(path)
@@ -165,7 +160,6 @@ def load_malicious(families=("F1", "F7")):
             field_len[key] = int(spec["field_len"])
             field_text[key] = value.encode("utf-8")
 
-    # 逐片 content_sha256（budget=8 那一档；两档结构相同，内容同）
     want = {}
     for line in common.INPUTS["w102_calls"].open(encoding="utf-8"):
         row = json.loads(line)
@@ -198,7 +192,6 @@ def load_malicious(families=("F1", "F7")):
                     true_offset=(secret_pos if secret_pos is not None else int(frag.offset)),
                     secret_pos=secret_pos))
             calls.append(out)
-            # 逐片对 content_sha256
             expect = want.get((family, pair_id, index))
             if expect is None:
                 mismatched.append(f"{pair_id}#{index}: calls.jsonl 无此调用")
@@ -235,14 +228,7 @@ def load_malicious(families=("F1", "F7")):
                  field_text=field_text, meta=meta)
 
 
-# ---------------------------------------------------------------- 交叉自检
 def check_against_w101(world):
-    """良性逐调用 `(offset, len, entity, field)` 必须与 ARM-KB 的覆盖行一致。
-
-    注意 `analysis/w101_coverage.csv` 只登记**被拒调用**（120 行），故这里只做
-    「被拒行能否在重建里找到同样的坐标」这一方向的核对；反向（重建里的每个调用
-    是否都被登记）不成立也不应成立。真正的逐调用一致性由 baseline 重放负责。
-    """
     rows = [r for r in csv.DictReader(common.INPUTS["w101_coverage"].open(encoding="utf-8"))
             if r["arm"] == "ARM-KB"]
     by_task = {}

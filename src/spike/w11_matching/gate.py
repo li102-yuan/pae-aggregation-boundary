@@ -65,7 +65,6 @@ class EpisodeResult:
 
 
 def _ratio_key(k):
-    """`_ratios` 的键：S1/S2 是 (entity, field) 或 entity 字符串；S3 是 `"*"`（W0.3 探针发现）。"""
     return f"{k[0]}::{k[1]}" if isinstance(k, tuple) else f"*::{k}"
 
 
@@ -179,16 +178,13 @@ def replay(episode, rule, matcher, field_len, entity_capacity):
 
 
 def entity_capacity(field_len):
-    """每个实体的**全部已登记字段**容量（S2 的朴素分母；不由攻击者选哪些字段而变）。"""
     out = {}
     for (entity, _field), total in field_len.items():
         out[entity] = out.get(entity, 0) + total
     return out
 
 
-# ---------------------------------------------------------------- 汇总与区间
 def wilson(k, n, z=1.959963984540054):
-    """Wilson 95% 双侧区间（任务级 cluster，不把调用当独立样本）。"""
     if n == 0:
         return (0.0, 0.0)
     p = k / n
