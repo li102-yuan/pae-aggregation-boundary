@@ -1,19 +1,5 @@
 # -*- coding: utf-8 -*-
-"""run_counters.py — 跑反制池（`go_eligible` 102 ＋ `G-F` cell 端点 2 ＋ 其余至 110）。
-
-入口三道断言（`D-023`／`W11.SPIKE` §3）：
-  1. `check_freeze()` 必须 `OK`；
-  2. `check_signoff()` 五格非空；
-  3. `guard.connect_attempts` 收尾必须为 0。
-
-产出：
-  analysis/w11spike_controls.csv   逐 (combo, counter, param, family) 一行
-  analysis/w11spike_counters.json  G-CA 对账、C-B 矩阵、逐行判定表
-
-用法：
-  python -m src.spike.w11_matching.run_counters               # 全量 110
-  python -m src.spike.w11_matching.run_counters --limit 3     # 计时/自检
-"""
+"""Run the counter suite and write the frontier table."""
 from __future__ import annotations
 
 import argparse

@@ -1,33 +1,11 @@
 # -*- coding: utf-8 -*-
-"""W7.3 图件阶段：fig1/fig2/fig3（SVG+PDF）＋ tab1a/tab1b/tab2（LaTeX booktabs）。
+"""Regenerate all figures and LaTeX tables from the result CSVs.
 
-一条命令重出全部九件：
-    .venv/Scripts/python.exe analysis/fig_w72.py
-
-纪律（窗口 W7.3 §二）：
-- 所有实验读数一律从 analysis/*.csv 读取；脚本内不硬编码任何实验数值。
-  脚本中仅有的常量是预注册判据门槛（(1) 30%、(2)(3) 90%、(5) 24 bit／H 0.5、④ 10%）
-  与机制参数 ℓ_min=8，出处 PREREG/D-023 §五，属判据而非数据。
-- 图内文字只用英文，且**不写任何数据文件路径**（闸门 1）：save() 每次都会扫
-  SVG 文本节点与 PDF 文本层，命中中文/`analysis/`/`.csv`/内部代号即断言失败。
-  行族（哪些行是 C001–C006、C031–C036、C151–C156）写在 LaTeX caption 与表注里。
-- 门符号与正文统一为 (1)…(5)（不用圈号）。
-- 样式：serif（Times New Roman）、无网格、去上边框（fig1 为双 y 轴，右轴刻度须挂在
-  右边框上，故保留右边框）、线宽 0.8–1.0、字号 ≥7pt、单栏宽 3.3 in；直接标注优先于图例。
-  灰度可辨：fig2 黑→浅灰线＋五种 marker＋五种线型；fig3 灰柱／深柱两档、y 轴 0–100%。
-- PDF 以 fonttype=42（TrueType 子集内嵌）输出，无 Type3、无位图；输出后逐件做
-  字节级自检（不得出现 Type3，必须出现 /FontFile2）。
-- SVG/PDF 元数据时间戳置空，保证重跑字节一致（脚本尾部自检 sha256）。
-- 小数位口径：误拦率一律一位小数，38/68 写作 55.9%（不写 55.88%）。
-- 不读/不改 analysis/ 下任何 CSV 的内容（只读）；airline 不入图（是表，另窗处理）。
-
-口径裁定：
-- fig1 右轴与 tab1b 的 residual/H 列＝自适应 θ′ 反制（C-B**）口径，取
-  w11spike_frontier.csv 的 C031–C036（M1·oracle 单字段覆盖臂，frozen110），
-  nominal 24/16/12/8/4/4 bit、H_max 0.542–0.975；这是与误拦列**不同的行族**，
-  表注须明写。
-- fig1 左轴误拦＝G-A 段 S1/D1/L1 探针（C001–C006，holdout 68），与 tab1a/tab1b 的
-  C151–C156 又是另一族；caption 须写明左轴是 C001–C006。
+All experimental values are read from analysis/*.csv; the only constants here are the
+preregistered decision thresholds and the matcher parameter l_min=8. Figure text is
+English-only and contains no file paths: save() asserts this on both the SVG text nodes
+and the PDF text layer. Misfire rates are printed to one decimal (38/68 -> 55.9%).
+Outputs are byte-identical on re-run (timestamps cleared, svg.hashsalt fixed).
 """
 
 import csv

@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
-"""baseline.py — S-1 基线自检（窗口 §5 步骤 3）。
-
-**不用自研实现**：良性侧直接调用 `src/gate/history.py::HistoryGate`（只读 import，
-quota 全 null ⇒ K_B-only，与 `ARM-KB` 同构），逐调用与 `analysis/w101_coverage.csv`
-的 120 条拒行比对：调用号、覆盖率、拒因必须逐项相同。
-
-恶意侧：`L1/S1/D1/θ=0.55` 重放 F1／F7，必须复现 `analysis/w102_pairs.csv`
-的 `r2=1`、`deny_at` 空、`F1 72/72`、`F7 20/20`。
-"""
+"""Reproduce the frozen baseline readings (68-task holdout, F1/F7 judgement sets)."""
 from __future__ import annotations
 
 import csv

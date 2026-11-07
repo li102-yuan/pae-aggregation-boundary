@@ -1,20 +1,5 @@
 # -*- coding: utf-8 -*-
-"""data.py — 两侧数据重建（窗口 §5 步骤 1–2）。**只用既有确定性数据，不造字节。**
-
-良性侧（68 个 holdout 可写任务）
-    来源：`src/mcp/sanity/bench_full.py` 的同一条 builder 链
-    （`source.load_tasks/load_db` → `carrier.build_task`），字段文本从
-    `configs/sanity/data/retail_db.json` 逐字规范化得到，不做任何补写。
-    自检：①每个 `(entity, field)` 的规范文本长度 == `store` 登记的 `field_len`；
-         ②任务数 114 / 可写 104 / holdout 可写 68 与冻结件一致；
-         ③逐调用 `(offset, len)` 与 `analysis/w101_coverage.csv` 的 ARM-KB 行一致。
-
-恶意侧（`F1` 72 对、`F7` 22 对）
-    来源：`src/attack/adaptive/families.py` 的生成器 + `state_store_v2.json` 的秘密值
-    + `scenarios/s2b_adaptive/pairs/<pair>/manifest.json` 的 ctx。
-    自检：逐片 `sha256(content) == calls.jsonl[*].fragments[*].content_sha256`，
-    任一片对不上即 `DATA_RECONSTRUCTION_FAILED`（窗口 §11），不得用假内容凑。
-"""
+"""Rebuild benign and malicious episodes from the frozen inputs."""
 from __future__ import annotations
 
 import csv

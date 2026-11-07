@@ -1,21 +1,5 @@
 # -*- coding: utf-8 -*-
-"""run_geom.py — `W11.4` 几何扫掠执行器（90 行 ＝ 5 档 × 6 个 θ′ × 3 臂）。
-
-入口断言（顺序即纪律，任一不过即 `SpikeStop`）：
-  1. 零模型调用：`GUARD.install()` ＋ `assert_no_model_imports()`；
-  2. `check_freeze()`：`FREEZE_GEOM.sha256` 三件 `OK`（**冻结早于第一个候选**）；
-  3. `grid_geom.json` 恰 90 行、(档, θ′, 臂) 组合完备、id 唯一；
-  4. `G1` 重切世界与 `W11.SPIKE` 良性世界**逐 episode 逐字节相同**（回归锚点前提）。
-
-判定（`PREREG_GEOM.json` 写死，本文件只是执行）：
-  * `H1_失效`：若 `G2` 或 `G3` 在 θ′=0.55 时 ① ≤30%（**任一臂**取最小值）；
-  * `H1_成立`：否则若 `G3` 在 θ′=0.55 时 ① 仍 >30%（**三臂全 >30%**）；
-  * 两者同时成立时**以失效优先**（`G2` 已穿过即说明空可行域依赖写几何），
-    边界点记首个 ≤30% 的档位；公式与优先级都在预注册里，不在此处改。
-
-用法：
-  python -m src.spike.w11geom.run_geom             # 90 行 + 图 + checks
-"""
+"""Run the geometry sweep (5 granularities x 6 thresholds x 3 arms)."""
 from __future__ import annotations
 
 import argparse

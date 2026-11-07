@@ -1,15 +1,5 @@
 # -*- coding: utf-8 -*-
-"""plot_geom.py — `W11.4` 交付图生成器（版式 v2）。**只读冻结 CSV，不重跑扫掠。**
-
-为什么单独一个脚本：`run_geom.py` 已随 `FREEZE_GEOM.sha256` 冻结（冻结早于第一个候选），
-其内嵌绘图在 `误拦 = 100%` 的面板上会与面板标题重叠（标题落在绘图区内）。修版式属于
-**呈现层**，不得回改冻结代码、更不得重跑候选，故把图从 `analysis/w11geom_curve.csv`
-单独重绘。**数值完全来自 CSV**；同一份 CSV 可随时重绘同一张图。
-
-用法：
-  python -m src.spike.w11geom.plot_geom            # 读 analysis/w11geom_curve.csv → svg
-  python -m src.spike.w11geom.plot_geom --check    # 只做几何自检（元素是否越界）
-"""
+"""Figure generator for the write-granularity sweep."""
 from __future__ import annotations
 
 import argparse

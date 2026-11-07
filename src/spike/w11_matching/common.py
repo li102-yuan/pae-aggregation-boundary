@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
-"""common.py — W11.SPIKE 的公共设施：路径、摘要、零模型调用证明。
-
-本文件只做三件事，不参与任何判定：
-1. 把输入路径与 sha256 固定成一张表（`INPUTS`），供 `inputs.json` 逐条落盘；
-2. 提供 `socket_guard()`：进程内拦截一切网络连接并计数——零模型调用的**结构性**证明
-   （不是"我们没写模型调用"，而是"这个进程连不出去"）；
-3. JSON/CSV 读写一律 UTF-8 + LF。
-
-窗口：`windows/W11.SPIKE_aggregation_matching.md`（spike，不进主表）。
-"""
+"""Shared paths, hashing, and freeze/sign-off checks."""
 from __future__ import annotations
 
 import hashlib

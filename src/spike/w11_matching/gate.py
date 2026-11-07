@@ -1,22 +1,5 @@
 # -*- coding: utf-8 -*-
-"""gate.py — 参数化重放引擎（候选规则的唯一实现）。
-
-与 `src/gate/history.py` 的关系：**只读复用**其区间并集（`_merge` / `_covered_bytes`），
-判据语义按窗口 §4 的三个新增维度重写；原文件一字未改。
-
-一条规则 = `Rule(scope, denom, lineage, theta, matcher, norm, unmatched, dest)`：
-
-| 维度 | 取值 | 含义 |
-|---|---|---|
-| `scope` | S1/S2/S3 | 单字段／同实体跨字段／全局会话 |
-| `denom` | D1/D2 | 范围内字段总容量（朴素）／oracle 目标长度 |
-| `lineage` | L1/L2/L3/L3c | 无归属／oracle 归属／M2 内容推断归属／L3+声明一致优先 |
-| `theta` | 0.55…1.0 | 判定阈值（**不改**冻结件的 θ，只作候选网格参数） |
-| `matcher` | none/M1/M2/M2-null/M2-short | 归属来源（L1/L2 不用） |
-| `norm` | declared/all4 | 匹配前的归一化范围 |
-| `unmatched` | allow/deny | 内容匹配不到时的处置（回落声明坐标／直接拒） |
-| `dest` | off/chan/cell | 目的地授权粒度（cell＝能力隔离，单列） |
-"""
+"""Parameterised replay engine for the candidate coverage criteria."""
 from __future__ import annotations
 
 import dataclasses

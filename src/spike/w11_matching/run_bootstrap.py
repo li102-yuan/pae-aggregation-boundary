@@ -1,15 +1,5 @@
 # -*- coding: utf-8 -*-
-"""run_bootstrap.py — §5 步骤 1–3 的落盘入口（**不跑候选网格**）。
-
-产出：
-  configs/w11spike/inputs.json      逐输入路径 + sha256 + 用途（窗口 §3 要求"逐个列进"）
-  configs/w11spike/prereg.json      跑前钉死：维度、网格、判据定义、go/no-go、先验
-  configs/w11spike/grid.json        显式枚举的组合清单（一行一个组合）
-  runs/w11spike-bootstrap-<hash>/   baseline.json / guard.json / env.json
-  runs/w11spike-bootstrap-<hash>/log.txt
-
-窗口 §15 的 SP1–SP5 未签核前，本脚本是唯一允许运行的入口。
-"""
+"""Write the frozen configuration files and bootstrap artefacts."""
 from __future__ import annotations
 
 import datetime

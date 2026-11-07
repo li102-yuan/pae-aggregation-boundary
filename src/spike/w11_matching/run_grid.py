@@ -1,26 +1,5 @@
 # -*- coding: utf-8 -*-
-"""run_grid.py — 候选网格执行器（W11.SPIKE §5 步骤 5–7）。
-
-入口两道断言（`D-023`）：
-  1. `check_freeze()` 必须 `OK`（三件 config 与 `FREEZE_W11SPIKE.sha256` 一致）；
-  2. `check_signoff()` 五格非空。
-
-用法：
-  python -m src.spike.w11_matching.run_grid --stage G-A --out analysis/w11spike_probe.csv
-  python -m src.spike.w11_matching.run_grid                      # 全量 234 行
-
-口径要点（照 `prereg`）：
-  * 误拦 = holdout 68 可写任务中「episode 内至少一次 deny」的任务数／68，Wilson 95%；
-  * `F1` 判定分母 72、`F7` 判定分母 20（执行 22，dev 2 对单列）；
-  * `intercepted` 沿用 `EpisodeResult.intercepted`（`got < truth_len`），**同时**报
-    `H = got / truth_len` 与「拦截后残熵」（本数据秘密值全 hex ⇒ 4 bit/字符）；
-  * **双分母**：`all`（72／20）与 `matchable`（M2＝63／16；`M2-short`＝72／20，
-    因 `ℓ_min` 从 8 降到 4，6 B 片段也能匹配）；
-  * **双口径**：`union`（多候选全部并入，`gate.attribution` 现行行为）与
-    `unique`（只认唯一候选，多候选按"未匹配"回落声明坐标）——W0.3 验收 §4 F3 要求；
-  * `G-G` 的 18 对 `allow`／`deny` 行读数必须全等（`M2-short` 对全部片段命中 ⇒
-    `unmatched=deny` 永不触发），脚本末尾**断言**并写进 `checks.json`。
-"""
+"""Run the candidate grid and write per-row metrics with dual denominators and dual ambiguity readings."""
 from __future__ import annotations
 
 import argparse

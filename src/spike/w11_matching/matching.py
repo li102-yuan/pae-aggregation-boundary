@@ -1,19 +1,5 @@
 # -*- coding: utf-8 -*-
-"""matching.py — 三个匹配臂（窗口 §4.2）：M1 明文模板、M2 HMAC 指纹、M2-null 负控制。
-
-口径
-----
-* **归一化**：`norm="declared"` 只按片段自报的 `encoding` 解码；`norm="all4"` 依次尝试
-  四种已覆盖编码（none/base64/hex/homoglyph），取能命中的那个。后者是对**已覆盖变换**
-  的最强非明文匹配器，C-C 的 covered 分支按它评。
-* **M1**：门持有原字段明文，直接子串匹配，返回**所有**出现位置（跨全部已登记字段）。
-* **M2**：不持明文。对每个字段预计算所有 `ℓ`-gram 的 HMAC-SHA256（`ℓ ∈ {8,16,32}`，
-  stride=1）建倒排表；查询时对片段逐 ℓ 投票定位。key 每 run 随机生成，**只落 sha256**。
-* **M2-null**：同 M2 但 key 随机且**不建索引** ⇒ 查询必然空，负控制用。
-
-`locate()` 的返回是 `(key, offset, length)` 列表；多个候选时全部返回并置 `ambiguous`。
-空列表 = 未匹配（决策由上层 `unmatched` 策略决定，不在本层）。
-"""
+"""Content-attribution matchers: plaintext, keyed l-gram index, and short-window variant."""
 from __future__ import annotations
 
 import base64

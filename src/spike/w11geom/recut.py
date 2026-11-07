@@ -1,31 +1,5 @@
 # -*- coding: utf-8 -*-
-"""recut.py — 良性侧「写单元」重切（`W11.4` T2）。**只动良性侧。**
-
-做一件事：把良性 episode 的每个写片段按冻结粒度切成**连续**小片，每片独立成一次调用
-（"单次写单元"的字面含义：一次调用最多写这么多字节）。**总字节数不变、序不变、
-内容逐字节取自原片段**（不造字节）。
-
-粒度定义（`configs/w11geom/PREREG_GEOM.json` 冻结，本文件只是它的实现）：
-
-| 档 | kind | 单次写单元 |
-|---|---|---|
-| `G1` | `identity` | 不切（回归锚点：必须逐字节等于 `W11.SPIKE` 的良性世界） |
-| `G2` | `ratio` 1/2 | `max(1, ⌊field_len × 1/2⌋)` |
-| `G3` | `ratio` 1/4 | `max(1, ⌊field_len × 1/4⌋)` |
-| `G4` | `ratio` 1/8 | `max(1, ⌊field_len × 1/8⌋)` |
-| `G5` | `cap` 3 | 绝对上限 **3 B**（低于 `M2` 的 `ℓ_min=8`，极端档） |
-
-**为什么是 `field_len × 比例` 而不是 `片段长 × 比例`**：窗口 §T1 的字面定义是
-「目标单次写单元 ＝ 字段长 × 比例」，含义是「一次调用最多写掉字段的这个比例」，
-即对 per-call 覆盖率的**上限约束**；片段本身已小于该上限时不动（不制造无意义切分）。
-两种读法在 `L1` 臂上给出**完全相同**的读数（见 `reports/spike/w11geom_report.md` §5
-的不变性引理），差别只在细分档实际发生的切分次数，故此处从字面并在报告里逐档披露
-`split_fragments / fragments`。
-
-**单调性提示**：`G5` 是绝对下限、`G4` 是相对比例，故 `field_len < 24` 的字段上
-`G4` 的单位（`field_len/8`）**小于** `G5` 的 3 B——`G4` 比 `G5` 更碎。报告须披露，
-不得把 `G5` 当成"最碎的一档"。
-"""
+"""Re-cut benign writes into coarser or finer per-call units, preserving total bytes."""
 from __future__ import annotations
 
 import dataclasses

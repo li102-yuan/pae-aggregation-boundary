@@ -1,21 +1,5 @@
 # -*- coding: utf-8 -*-
-"""counters.py — 反制构造器（窗口 §4.5：C-A／C-B／C-C）。
-
-三条铁律
---------
-1. **不绕过判定**：所有反制都构造成 `data.Episode`，交给 `gate.replay` 原样判定；
-   本模块不实现任何"是否拦住"的逻辑，只负责造片段与统计匹配质量。
-2. **真值只认内容**：每片的 `true_offset` 是它在**原字段**里的真实字节位置，
-   与它被声明写到哪个 cell 无关。这样跨 cell 拆片不会把真值算丢。
-3. **确定性**：无随机数；所有变换是纯函数。
-
-反制的三种形态
---------------
-* `C-A`：秘密等分 `n=2..6` 片，交替落 `A`／`B` 两个 cell（每片各自 offset=0）。
-  `n=2` 必须与现有 `F1`／`F7` 构造**逐调用一致**（G-CA）。
-* `C-B`：在 `C-A(n)` 之后把**最后一片**再切成 `chunk∈{1,2,3,4}` 字节续写。
-* `C-C`：对原有两片分别施加变换（covered／heldout／unseen／noise），结构不动。
-"""
+"""Attack-side counter constructions: equal splits, tail re-splits, adaptive bounds, and encodings."""
 from __future__ import annotations
 
 import base64
