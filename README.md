@@ -1,8 +1,11 @@
 # Reproduction artefacts — cross-call aggregation exfiltration on LLM agents
 
 This repository contains the **data, frozen specifications, and code** needed to regenerate
-every table and figure of the associated manuscript. It intentionally does **not** contain the
-manuscript text: the article is submitted to *Computers & Security*, and no preprint is posted.
+every table and figure of the associated manuscript. The **public repository** does not
+contain the manuscript text (the article is submitted to the *Journal of Network and Computer
+Applications* and no preprint
+is posted); the supplementary archive submitted with the article does include the LaTeX source
+(`paper/main.tex`) so the tables and figures can be regenerated in context.
 Start at **[`REPRODUCE.md`](REPRODUCE.md)** — it maps each figure/table to its input CSV and the
 single command that regenerates it.
 

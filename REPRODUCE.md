@@ -2,7 +2,9 @@
 
 Environment: CPython 3.13 with `numpy`, `matplotlib` and `pymupdf`; the exact versions used for
 the shipped artefacts are pinned in `requirements.txt`. Install with
-`python -m pip install -r requirements.txt`. No model calls and no network access are needed.
+`python -m pip install -r requirements.txt`. No model calls and no network access are needed
+to regenerate the tables and figures; the model-in-the-loop records reported in Section 10
+(30/30, 0/15, 3/18) are not reproduced here and can be requested from the corresponding author.
 
 ## 0. One command
 
@@ -40,6 +42,8 @@ C031–C036 on the right); the caption in the manuscript says so, and the script
 `tab1a`/`tab1b` are rows C151–C156 of `analysis/w11spike_grid.csv`; their residual/`H` columns
 are rows C031–C036 of `analysis/w11spike_frontier.csv` (a different row family, labelled in the
 table note). `tab2` reads `analysis/w11spike_controls.csv` (8400 rows) and the frontier file.
+`go_eligible=1` marks the 102 of 234 grid rows that pass the preregistered go/no-go rule;
+`deployable=1` is a separate, looser criterion (138 rows) and is not used in any table or figure.
 
 ## 3. Claims -> data
 
@@ -51,7 +55,7 @@ table note). `tab2` reads `analysis/w11spike_controls.csv` (8400 rows) and the f
 | residual 24 to 4 bit, H 0.542 to 0.975 (envelope over episodes) | `analysis/w11spike_frontier.csv` | rows C031–C036, M1 arm |
 | 0/102 candidates pass all five gates | `analysis/w11spike_grid.csv` | `go_eligible=1` |
 | G1–G5 identical at theta'=0.55 | `analysis/w11geom_curve.csv` | `theta=0.55`, `arm=L1` |
-| theta* = 0.9877 (21st largest final coverage) | `analysis/w11geom_checks.json` | `analytic_crossing.theta_star_exclusive` |
+| theta*_analytic = 0.9877 (21st largest final coverage) | `analysis/w11geom_checks.json` | `analytic_crossing.theta_star_exclusive` |
 | airline 14/15 = 93.3%, F7 46/46 (M2) | `analysis/w11airline_grid.csv` | rows A011, A013, A014 |
 | airline M2-short 9/46 and 0/46 intercepted, 92 ambiguous fragments | `analysis/w11airline_grid.csv` | rows A019, A021, A022 |
 | 126 constructed / 104 judged / 22 excluded tau pairs; 572/572; 0/104; Wilson 3.56% | `analysis/tau_pair_matrix_summary.md` | aggregate statistics of the construction matrix |

@@ -2,7 +2,7 @@
 % Seven columns + superscript arms: the eight-column form overflowed the 387 pt text block.
 \begin{table}[!htbp]
 \centering
-\caption{Counter-packing readings for the three candidates that pass gates (1) and (2) (union reading), all at $\theta'=1.0$. Bold = fails a preregistered gate.}
+\caption{Counter-packing readings for the three closest candidates (union reading), all at $\theta'=1.0$: C204 fails C-A, C156 fails C-C, and C222 fails gate (5). Bold = fails a preregistered gate.}
 \label{tab:counters}
 \footnotesize
 \begin{tabular}{lrrrrrr}
@@ -16,6 +16,6 @@ C222$^{c}$ & 1.00 & 1.00 & \textbf{4/0.975} & 0.00 (0.161) & \textbf{4/0.975} & 
 \end{tabular}
 \par\smallskip
 {\footnotesize\begin{minipage}{0.98\linewidth}
-\footnotesize Rows are the three candidates of the coverage grid, all read at $\theta'=1.0$; every counter column is a separate run of the self-built counter-constructions, not a row of Tables~\ref{tab:maina}--\ref{tab:mainb}. $^{a}$~M2 (content fingerprint, $\ell_{\min}=8$\,B), closed-world deny. $^{b}$~M2-short ($\ell_{\min}=4$\,B), unmatched = allow. $^{c}$~M2-short, closed-world deny. C-A = min coverage rate over equal-split variants $n{=}2..6$ (both field families); C-B = min over re-split variants (base2/base6 $\times$ chunk 1--4); C-B** = adaptive-$\theta'$ upper bound (frontier rows of the same candidate); C-C = max unmatched rate over covered encodings (none/base64/hex/homoglyph). resid./$H$ = residual (bit) / partial-leakage fraction, worst case over the C-A/C-B/C-B* readings (min residual, max $H$ at that residual). A value in parentheses is the Wilson 95\% upper bound, reported for every 0/$n$ reading.
+\footnotesize Rows are the three candidates of the coverage grid, all read at $\theta'=1.0$; every counter column is a separate run of the self-built counter-constructions, not a row of Tables~\ref{tab:maina}--\ref{tab:mainb}. $^{a}$~M2 (content fingerprint, $\ell_{\min}=8$\,B), closed-world deny. $^{b}$~M2-short ($\ell_{\min}=4$\,B), unmatched = allow. $^{c}$~M2-short, closed-world deny. C-A = min coverage rate over equal-split variants $n{=}2..6$ (both field families); C-B = min over re-split variants (base2/base6 $\times$ chunk 1--4), one allowed call packing $\lceil\theta' L\rceil-1$ bytes; C-B* = the same split with the remainder delivered on a second call (tail delivery); C-B** = adaptive-$\theta'$ upper bound (frontier rows of the same candidate); the three C-B layers are defined in Section~\ref{sec:c1}. C-C = max unmatched rate over covered encodings (none/base64/hex/homoglyph). resid./$H$ = residual (bit) / partial-leakage fraction, worst case over the C-A/C-B/C-B* readings (min residual, max $H$ at that residual). Structural interception is reported against both the all and matchable denominators; benign misfire under both the union and unique ambiguity readings. A value in parentheses is the Wilson 95\% upper bound, reported for every 0/$n$ reading.
 \end{minipage}}
 \end{table}

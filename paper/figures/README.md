@@ -18,6 +18,6 @@
 - `paper/figures/fig2_geometry.svg`: 641b4c2077bc0c53
 - `paper/figures/fig3_lmin.pdf`: 5085bc6df66e9211
 - `paper/figures/fig3_lmin.svg`: fbbe7fcb43328d79
-- `paper/tables/tab1a_main.tex`: b4815b7c5c50e94b
+- `paper/tables/tab1a_main.tex`: 20c885ce77ebfefe
 - `paper/tables/tab1b_cost.tex`: b043a1a463b97ab8
-- `paper/tables/tab2_counters.tex`: dabdac391dd044c3
+- `paper/tables/tab2_counters.tex`: cd7e4e9d1fe62d07

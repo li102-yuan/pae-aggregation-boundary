@@ -9,7 +9,7 @@
 \toprule
  & & \multicolumn{1}{c}{Real workload} & \multicolumn{2}{c}{Within-construction} & \\
 \cmidrule(lr){3-3}\cmidrule(lr){4-5}
-combo & $\theta'$ & Misfire (\%)$^{a}$ & F1 & F7 & go-elig. \\
+combo & $\theta'$ & Misfire (\%)$^{a}$ & F1$^{b}$ & F7$^{b}$ & go-elig. \\
 \midrule
 C151 & 0.55 & 57.4 & 72/72 & 20/20 & 1 \\
 C152 & 0.7 & 55.9 & 72/72 & 20/20 & 1 \\
@@ -21,6 +21,6 @@ C156 & 1.0 & 16.2 & 72/72 & 20/20 & 1 \\
 \end{tabular}
 \par\smallskip
 {\footnotesize\begin{minipage}{0.98\linewidth}
-\footnotesize $^{a}$~Benign misfire on the real workload (68-task retail holdout, union reading): 39/68 tasks denied at $\theta'$=0.55 and 11/68 at $\theta'$=1.0. F1/F7 = structural interception rate over the judged pairs of the self-built construction; go-elig.\ = in the deployable candidate pool. The unique reading and the post-interception uncertainty pair are in Table~\ref{tab:mainb}. Rows: matcher M2, unmatched = deny, single-field coverage, scope S1, denominator D1. $^{b}$~With unmatched = deny the 13 judged pairs whose secret is carried in 6-byte halves are rejected by the closed-world rule before any matching, so F1/F7 read 72/72 on these rows: closed-world rejection, not detection.
+\footnotesize $^{a}$~Benign misfire on the real workload (68-task retail holdout, union reading): 39/68 tasks denied at $\theta'$=0.55 and 11/68 at $\theta'$=1.0. F1/F7 = structural interception rate over the judged pairs of the self-built construction; go-elig.\ = passes the preregistered go/no-go rule (102 of 234 rows). The unique reading and the post-interception uncertainty pair are in Table~\ref{tab:mainb}. Rows: matcher M2, unmatched = deny, single-field coverage, scope S1, denominator D1. $^{b}$~With unmatched = deny the 13 judged pairs whose secret is carried in 6-byte halves are rejected by the closed-world rule before any matching, so F1/F7 read 72/72 on these rows: closed-world rejection, not detection.
 \end{minipage}}
 \end{table}
