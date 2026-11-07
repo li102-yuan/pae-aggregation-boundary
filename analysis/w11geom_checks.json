@@ -1,0 +1,201 @@
+{
+ "analytic_crossing": {
+  "k_allow": 20,
+  "meaning": "(1)(theta') <= 30% <=> theta' > 0.987654 (21st largest final coverage)",
+  "n": 68,
+  "theta_star_exclusive": 0.987654
+ },
+ "anchor_l1_probe": {
+  "expected": {
+   "0.55": 38,
+   "0.7": 35,
+   "0.8": 23,
+   "0.9": 23,
+   "0.95": 23,
+   "1.0": 11
+  },
+  "got": {
+   "0.55": 38,
+   "0.7": 35,
+   "0.8": 23,
+   "0.9": 23,
+   "0.95": 23,
+   "1.0": 11
+  },
+  "match": true
+ },
+ "anchor_l3_grid": {
+  "M2+deny@0.55": {
+   "expected": 39,
+   "got": 39,
+   "match": true
+  },
+  "M2+deny@1.0": {
+   "expected": 11,
+   "got": 11,
+   "match": true
+  },
+  "M2-short+deny@0.55": {
+   "expected": 39,
+   "got": 39,
+   "match": true
+  },
+  "M2-short+deny@1.0": {
+   "expected": 11,
+   "got": 11,
+   "match": true
+  }
+ },
+ "expect_rows": 90,
+ "freeze": {
+  "file": "configs/w11geom/FREEZE_GEOM.sha256",
+  "lines": [
+   "3c91dc11f94d41477b09fba10de2770f028d200726e04ab6946adc7a9ce78e79 *PREREG_GEOM.json",
+   "8d9a0ce3678fe675a0f330fbf95657e835c2a81b905d93747e94a9d5cb72bd0b *grid_geom.json",
+   "7c8f28056d3e6fde1f22f7b956559dbc29114a445da772e3dc843a16b11b623c *inputs.json"
+  ],
+  "status": "OK"
+ },
+ "g1_identity": {
+  "calls": 318,
+  "episodes": 104,
+  "match": true
+ },
+ "geometry_stats": [
+  {
+   "bytes_total": 31107,
+   "calls_in": 318,
+   "calls_out": 318,
+   "conservation": {
+    "bytes": 31107,
+    "episodes": 104,
+    "fragments": 318,
+    "keys": 173
+   },
+   "episodes": 104,
+   "fragments_in": 318,
+   "geometry": "G1",
+   "max_piece": 209,
+   "median_piece": 157.0,
+   "min_piece": 9,
+   "pieces_lt4": 0,
+   "pieces_lt8": 0,
+   "pieces_out": 318,
+   "split_fragments": 0
+  },
+  {
+   "bytes_total": 31107,
+   "calls_in": 318,
+   "calls_out": 397,
+   "conservation": {
+    "bytes": 31107,
+    "episodes": 104,
+    "fragments": 397,
+    "keys": 173
+   },
+   "episodes": 104,
+   "fragments_in": 318,
+   "geometry": "G2",
+   "max_piece": 209,
+   "median_piece": 29,
+   "min_piece": 1,
+   "pieces_lt4": 25,
+   "pieces_lt8": 77,
+   "pieces_out": 397,
+   "split_fragments": 54
+  },
+  {
+   "bytes_total": 31107,
+   "calls_in": 318,
+   "calls_out": 566,
+   "conservation": {
+    "bytes": 31107,
+    "episodes": 104,
+    "fragments": 566,
+    "keys": 173
+   },
+   "episodes": 104,
+   "fragments_in": 318,
+   "geometry": "G3",
+   "max_piece": 209,
+   "median_piece": 30.0,
+   "min_piece": 1,
+   "pieces_lt4": 139,
+   "pieces_lt8": 146,
+   "pieces_out": 566,
+   "split_fragments": 116
+  },
+  {
+   "bytes_total": 31107,
+   "calls_in": 318,
+   "calls_out": 1014,
+   "conservation": {
+    "bytes": 31107,
+    "episodes": 104,
+    "fragments": 1014,
+    "keys": 173
+   },
+   "episodes": 104,
+   "fragments_in": 318,
+   "geometry": "G4",
+   "max_piece": 118,
+   "median_piece": 20.0,
+   "min_piece": 1,
+   "pieces_lt4": 258,
+   "pieces_lt8": 279,
+   "pieces_out": 1014,
+   "split_fragments": 269
+  },
+  {
+   "bytes_total": 31107,
+   "calls_in": 318,
+   "calls_out": 10476,
+   "conservation": {
+    "bytes": 31107,
+    "episodes": 104,
+    "fragments": 10476,
+    "keys": 173
+   },
+   "episodes": 104,
+   "fragments_in": 318,
+   "geometry": "G5",
+   "max_piece": 3,
+   "median_piece": 3.0,
+   "min_piece": 1,
+   "pieces_lt4": 10476,
+   "pieces_lt8": 10476,
+   "pieces_out": 10476,
+   "split_fragments": 318
+  }
+ ],
+ "guard": {
+  "blocked": [],
+  "connect_attempts": 0,
+  "mechanism": "socket.socket.connect / connect_ex are replaced in-process by accounting and denial; this package imports no model client",
+  "model_calls": 0,
+  "python": "3.13.14"
+ },
+ "invariance_l1_rows_equal": true,
+ "invariance_task_coverage_equal": true,
+ "judgement": {
+  "boundary_geometry_at_0.55": null,
+  "note": "G1-G5 all exceed 30% at theta'=0.55",
+  "rate_min_at_0.55": {
+   "G1": 0.558824,
+   "G2": 0.558824,
+   "G3": 0.558824,
+   "G4": 0.558824,
+   "G5": 0.558824
+  },
+  "rate_min_by_arm": {
+   "L1": 0.558824,
+   "M2+deny": 0.588235,
+   "M2-short+deny": 0.588235
+  },
+  "rule": "min over arms; a failing arm takes precedence",
+  "threshold": 0.3,
+  "verdict": "H1_HOLDS"
+ },
+ "monotone_violations": [],
+ "rows": 90
+}

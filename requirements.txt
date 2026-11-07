@@ -1,0 +1,9 @@
+# Reproduction environment for paper/figures and paper/tables.
+# Install:  python -m pip install -r requirements.txt
+# Then:     python analysis/fig_w72.py
+#
+# Versions below are the ones that produced the shipped artifacts
+# (CPython 3.13.14, Windows 64-bit). No model calls and no network are needed.
+numpy==2.5.4
+matplotlib==3.11.2
+pymupdf==2.1

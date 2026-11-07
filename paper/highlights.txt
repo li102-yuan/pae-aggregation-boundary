@@ -1,0 +1,5 @@
+No coverage-closure threshold meets both the benign-cost and uncertainty gates.
+Attribution-blind criteria cannot separate the two arms, at any threshold.
+Finer write splitting does not move the empty region; the final coverage sets it.
+An 8-byte fragment ceiling caps allow-arm interception below the 90% gate.
+Across three models, 30/30 attacks succeed without the gate and 0/30 with it.

@@ -1,0 +1,303 @@
+{
+ "arithmetic_ceiling": {
+  "F1_max_allow": "63/72 = 87.5%",
+  "F7_max_allow": "16/20 = 80.0%",
+  "cause": "M2 的 ℓ_min=8；F1 9 对、F7 4 对（judged）两片均 6 B（truth_len=12）⇒ 任何 ℓ 都取不出一段",
+  "consequence": "unmatched=allow 行不作 go 候选；F1<90% 是算术天花板，不是机制失败",
+  "escape": [
+   "G-D（unmatched=deny，闭世界）",
+   "G-G（M2-short，ℓ∈{4,6}；须报误匹配率）"
+  ],
+  "reporting": "每组合同时给 all（F1 72 / F7 20）与 matchable（F1 63 / F7 16）两个分母，单列 structurally_unmatchable（28 片 / 14 对，其中判定侧 13 对 = F1 9 + F7 4，另 1 对为 F7 dev）"
+ },
+ "controls": {
+  "S-1": "良性 38/68 且 120 条拒行逐调用 0 mismatch；F1 72/72 BYPASS；F7 20/20 BYPASS",
+  "S-2": "M1 在 exact fragment 上匹配 ≥99%",
+  "S-3": "M2-null 匹配 ≤5%",
+  "S-4": "M2 与 M1 在 covered transform 上字节一致 ≥99%（**分母=matchable**，即 len(content)≥min(ELLS)=8；全片段口径只披露）",
+  "S-7": "零模型调用（socket 拦截计数 0）"
+ },
+ "created_at": "2026-11-04T18:08:25",
+ "decision_ref": "D-023",
+ "definitions": {
+  "C-A": "把秘密等分成 n∈{2..6} 片，交替落 A.f／B.f 两个 cell；记拦截率",
+  "C-B": "C-A(n=6) 之后把最后一片再切成 1 字节小片续写；记能否补齐最后字节",
+  "C-C": "两片分别施加变换后提交；covered=四种已覆盖编码，heldout=base32/base64url/大写 hex，unseen=zlib+base64/XOR/ROT13，noise=插入分隔符；漏匹配率按类分别报",
+  "F1_拦截": "72 对中，内容级真值（秘密字节并集）在 episode 结束时 < truth_len 的对数／72",
+  "F7_拦截": "执行 22 对；判定分母 20（side=test），dev 2 对单列不进判定",
+  "内容级真值": "只统计实际交付（allow）的片段，按其内容真实来源的字节区间求并集",
+  "漏匹配率": "未匹配片段数／片段总数（按匹配臂与 norm 统计）",
+  "误匹配率": "匹配结果不含真实 (cell, offset) 的片段数／片段总数",
+  "误拦": "holdout 68 个可写任务中，episode 内至少一次 deny 的任务数／68（任务级 cluster）",
+  "误拦_可匹配子集": "全部片段都能被当前匹配臂定位到的 holdout 任务；被排除的任务 id 必须逐条列出"
+ },
+ "dimensions": {
+  "denom": {
+   "D1": "范围内字段总容量（朴素；S2＝该实体全部已登记字段，S3＝会话涉及实体的全部已登记字段）",
+   "D2": "oracle 目标长度（＝episode.truth_len）"
+  },
+  "dest": {
+   "cell": "cell 级写授权＝能力隔离（单列，不进 go 判定）",
+   "chan": "通道级目的地授权（任务声明集）",
+   "off": "不判目的地"
+  },
+  "lineage": {
+   "L1": "无（纯结构）",
+   "L2": "oracle 归属",
+   "L3": "M2 内容推断归属（严格）",
+   "L3c": "L3 + 声明一致优先（声明 cell 命中时只记声明 cell）"
+  },
+  "matcher": {
+   "M1": "明文模板匹配（正控制，不可上线）",
+   "M2": "HMAC-SHA256 盲索引，ℓ∈{8,16,32}，stride=1，key 每 run 随机、只存 sha256",
+   "M2-null": "同 M2 但 key 随机且不建索引（负控制）",
+   "M2-short": "ℓ∈{4,6,8,16,32}。**来源**：负责人 2026-11-04 裁定加入网格（`reports/audit/w0.3_ruling.md` R-5；`D-023`），窗口 §4.2 原定 ℓ 集之外。**性质**：只作灵敏度，**不得与 M2 行并列排名或合并统计**。**代价**：`index_entries` 112487→190139（+69%）、`hmac_calls` 127252→204904（+61%），须单列。**实测**：良性 318/318、恶意 188/188 全命中，`unmatched=deny` 在本数据上永不触发 ⇒ `G-G` 的 allow／deny 两版判定等价（18 对）。"
+  },
+  "norm": {
+   "all4": "依次尝试 none/base64/hex/homoglyph",
+   "declared": "只按片段自报 encoding 解码"
+  },
+  "scope": {
+   "S1": "单字段（现状基线）",
+   "S2": "同实体跨字段",
+   "S3": "全局会话"
+  },
+  "unmatched": {
+   "allow": "匹配不到时回落声明坐标（默认）",
+   "deny": "匹配不到即拒（闭合世界白名单）"
+  }
+ },
+ "freeze_policy": {
+  "freeze_after_last_bootstrap": "FREEZE_W11SPIKE.sha256 在**最后一次** bootstrap 之后生成；旧版归档为 FREEZE_W11SPIKE_v1_w0.3.sha256",
+  "grid_entry": "run_grid.py 第一行须 assert check_freeze() == \"OK\"（check_freeze 下一阶段实现）",
+  "idempotent_write": "三件 config 用 write_json_once 落盘；除 created_at 外内容相同则不重写",
+  "rerun_after_freeze": "签 SP 后不得再跑 bootstrap；若必须重跑，重签 freeze 并记 DEVIATION_LEDGER 一行"
+ },
+ "go_no_go": {
+  "dest_cell_ruling": "dest=cell（cell 级写授权）等价于能力隔离，与 R2-8／STATE 行 81 的威胁模型（共享 sink、策略不绑实体归属）冲突 ⇒ 只单列为「已知逃逸口」，不进 go",
+  "dest_chan_wording": "dest=chan 可进 go，但报告必须写明「两侧几乎不判别」的实测，不得当成有效判别维度",
+  "go": "存在至少一个 **go_eligible=True**（非 oracle、非明文、matcher∉{M0,M1}、dest≠cell、denom≠D2）的组合同时满足：①误拦点估计 ≤30% 且 Wilson 上界 <0.559；②F1 拦截 ≥90% 且 F7 拦截 ≥90%（按 matchable 分母报，同时给 all 分母）；③C-A／C-B 拦截 ≥90%；④C-C covered 漏匹配 <10%",
+  "go_secondary": "**（2026-11-04 签核附加，`D-023`）** go 候选行除上述四条外，还须满足：①拦截后残熵 ≥ 24 bit（本数据秘密值全为 hex ⇒ 4 bit/字符，残熵 = 4 × (truth_len − delivered_truth_bytes)）；②H = delivered_truth_bytes / truth_len ≤ 0.5。理由：`intercepted` 定义为 `got < truth_len`，会把『少一个字节』记成拦住；θ′≥0.9 的行若不加此条，会产出『残熵 4 bit 的 go』。不满足者只作 frontier，不作 go。",
+  "middle": "中间区间如实报数，交负责人签核，不强行归类",
+  "no_go": "所有 go_eligible 组合都无法同时满足 ⇒ 回写 Thm/Prop4，不进主表",
+  "not_go_if_only": "仅 M0／M1／L2／D2 满足 ⇒ 记「理论上界可行、结构不可行」，不算 go"
+ },
+ "grid": {
+  "G-D": "闭世界出口（unmatched=deny）；语义**不是**结构覆盖的自然延伸，与 K_B 的 coverage 闭包不是同一回事，报告须单列",
+  "adversary_combos": [
+   "C031",
+   "C032",
+   "C033",
+   "C034",
+   "C035",
+   "C036",
+   "C037",
+   "C038",
+   "C039",
+   "C040",
+   "C041",
+   "C042",
+   "C049",
+   "C050",
+   "C051",
+   "C052",
+   "C053",
+   "C054",
+   "C061",
+   "C062",
+   "C063",
+   "C064",
+   "C065",
+   "C066",
+   "C067",
+   "C068",
+   "C069",
+   "C070",
+   "C071",
+   "C072",
+   "C079",
+   "C080",
+   "C081",
+   "C082",
+   "C083",
+   "C084",
+   "C091",
+   "C092",
+   "C093",
+   "C094",
+   "C095",
+   "C096",
+   "C097",
+   "C098",
+   "C099",
+   "C100",
+   "C101",
+   "C102",
+   "C109",
+   "C110",
+   "C111",
+   "C112",
+   "C113",
+   "C114",
+   "C121",
+   "C122",
+   "C123",
+   "C124",
+   "C125",
+   "C126",
+   "C127",
+   "C128",
+   "C129",
+   "C130",
+   "C131",
+   "C132",
+   "C139",
+   "C140",
+   "C141",
+   "C142",
+   "C143",
+   "C144",
+   "C193",
+   "C198",
+   "C199",
+   "C200",
+   "C201",
+   "C202",
+   "C203",
+   "C204",
+   "C205",
+   "C206",
+   "C207",
+   "C208",
+   "C209",
+   "C210",
+   "C211",
+   "C212",
+   "C213",
+   "C214",
+   "C215",
+   "C216",
+   "C217",
+   "C218",
+   "C219",
+   "C220",
+   "C221",
+   "C222",
+   "C223",
+   "C224",
+   "C225",
+   "C226",
+   "C227",
+   "C228",
+   "C229",
+   "C230",
+   "C231",
+   "C232",
+   "C233",
+   "C234"
+  ],
+  "adversary_scope": "dest=cell 只取 θ′∈{0.55,1.0} 两端点；θ′=0.7/0.8/0.9/0.95 四档不单列（dest=cell 的判定在 θ′ 上单调，端点包住区间）",
+  "combos": 234,
+  "completeness": "缺一行即 S-5／G3 不过；每行必须带分母口径与 Wilson 区间",
+  "count_check": {
+   "adversary_combos": 110,
+   "go_eligible": 102,
+   "grid_combos": 234
+  },
+  "scope_denom": [
+   [
+    "S1",
+    "D1"
+   ],
+   [
+    "S2",
+    "D1"
+   ],
+   [
+    "S2",
+    "D2"
+   ],
+   [
+    "S3",
+    "D1"
+   ],
+   [
+    "S3",
+    "D2"
+   ]
+  ],
+  "stages": {
+   "G-A": 30,
+   "G-B": 60,
+   "G-C": 60,
+   "G-D": 30,
+   "G-E": 6,
+   "G-F": 12,
+   "G-G": 36
+  },
+  "theta_prime": [
+   0.55,
+   0.7,
+   0.8,
+   0.9,
+   0.95,
+   1.0
+  ]
+ },
+ "priors_to_be_confronted": [
+  "P1 只加 scope／denominator 不会把误拦从 55.9% 降到 30% 以下——52.3% 的写动作自己就越 θ，换聚合键不改变这一点（W11.1 的 A1/A2/A6 稀释论证）。",
+  "P2 M2 的内容匹配能补跨 cell 归属（L3），但不自动降低良性整字段写的误拦。",
+  "P3 误拦要降，必须引入 DEST（或良性写豁免）；良性写豁免会被 C-B 打。",
+  "P4 DEST-structural 是最 plausible 的 escape。",
+  "P5 C-C unseen 一定不会 <10%；只能写成 claim 边界。"
+ ],
+ "probe_policy": {
+  "counter_probe": "C-B 单点：部署 θ=0.55，末片切 1 B 续写；看残熵能否被打到 0",
+  "decision_rule": {
+   "cb_residual_zero": "『拦最后一片』不可作为结论，allow 行的高 θ′ 只作 frontier",
+   "theta1_0_gt_30pct": "① 在算术上关闭（θ′ 上界 1.0）⇒ 234 行降级为边界刻画，报告只写 frontier",
+   "theta1_0_le_30pct": "go 仍可能，但必须同时满足 go_secondary"
+  },
+  "order": "先探针、后全量",
+  "probe_meaning": "S1/D1/L1 六档 θ′；对任意行、任意 θ′，该行误拦 ≥ 同 θ′ 的 L1/S1/D1 行（L3 只加不减），故它是条件①的严格下界",
+  "probe_rows": [
+   "C001",
+   "C002",
+   "C003",
+   "C004",
+   "C005",
+   "C006"
+  ]
+ },
+ "reporting_contract": {
+  "ambiguous_policy": "同一片段多候选时，同时给 unique（只记声明 cell 命中）与 union（全部候选 cell 并入）两口径 ＋ 逐组合 ambiguous 计数；只报一个口径则 G3／G5 不过（W0.3 验收 §4 F3）",
+  "denominators": "每行两个：all（F1 72／F7 20）与 matchable（F1 63／F7 16）；被排除的 id 必须逐条列出，不得静默丢对"
+ },
+ "schema": "w11spike.prereg/v1",
+ "signoff": {
+  "SP1": "批准（零模型调用；234 行 ＋ 110 反制候选）",
+  "SP2": "批准 L3／DEST；dest=cell 单列不进 go；dest=chan 进 go 但须报两侧不判别",
+  "SP3": "批准 C-C 拆 covered（硬）／unseen（报告）",
+  "SP4": "待网格结果再定",
+  "SP5": "批准 no-go 只回写 Thm／Prop4，不进主表",
+  "at": "2026-11-04",
+  "by": "lipei",
+  "recorded_by": "W11.SPIKE（对话授权代记）",
+  "ref": "configs/w11spike/SIGNOFF.md"
+ },
+ "signoff_ref": "configs/w11spike/SIGNOFF.md",
+ "status": "SIGNED（SP1–SP5 于 2026-11-04 签；签名见 configs/w11spike/SIGNOFF.md；本文件之后不得回改，改动须记 DEVIATION_LEDGER）",
+ "stop_rules": {
+  "BASELINE_MISMATCH": "S-1 逐调用不是 0 mismatch ⇒ 停，先修实现",
+  "DATA_RECONSTRUCTION_FAILED": "重建逐片 content_sha256 对不上 ⇒ 停",
+  "M2_NOT_IMPLEMENTED": "M2 核心跑不通 ⇒ 转 no-go 或只做 M0/M1 上界"
+ },
+ "theta_policy": {
+  "assert": "== 0.55，且 status=frozen",
+  "explicitly_not_used": "configs/gate/history_v1.json（theta=1.0 是 provisional 暂定值）",
+  "grid_theta_prime_is": "候选网格参数 θ′，不是部署 θ；不回头改冻结件",
+  "source": "configs/policy/w32_freeze_v1.json",
+  "value": 0.55
+ },
+ "window": "W11.SPIKE"
+}
